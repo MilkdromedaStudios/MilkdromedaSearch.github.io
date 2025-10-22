@@ -137,110 +137,59 @@
   <!-- Results -->
   <div class="results" id="results"></div>
 <script>
-  const API_URL = "https://api.cohere.ai/v1/generate";
-  const API_KEY = "AyJw0s2qsoVi5VTYiir8i19Wx4ZJysCawiQtHXpJ"; // replace with your Cohere key
-
-  // --- Dark/Light Mode with Cookies ---
-  function setCookie(name, value, days) {
-    const d = new Date();
-    d.setTime(d.getTime() + (days*24*60*60*1000));
-    document.cookie = name + "=" + value + ";expires=" + d.toUTCString() + ";path=/";
-  }
-  function getCookie(name) {
-    const cname = name + "=";
-    const decoded = decodeURIComponent(document.cookie);
-    const ca = decoded.split(';');
-    for(let c of ca) {
-      while (c.charAt(0) === ' ') c = c.substring(1);
-      if (c.indexOf(cname) === 0) return c.substring(cname.length, c.length);
-    }
-    return "";
-  }
-  function toggleMode() {
-    document.body.classList.toggle("dark");
-    const isDark = document.body.classList.contains("dark");
-    setCookie("mode", isDark ? "dark" : "light", 365);
-    document.querySelector(".mode-toggle").textContent = isDark ? "☀️" : "🌙";
-  }
-  function loadMode() {
-    const mode = getCookie("mode");
-    if (mode === "dark") {
-      document.body.classList.add("dark");
-      document.querySelector(".mode-toggle").textContent = "☀️";
-    }
-  }
-  loadMode();
-
-  // --- Search Function ---
   async function search(fromTop=false) {
     const query = fromTop ? document.getElementById('queryTop').value : document.getElementById('query').value;
     const resultsDiv = document.getElementById('results');
     resultsDiv.style.display = "block";
     document.getElementById('homeHeader').style.display = "none";
-    document.getElementById('topbar').style.display = "block";
+    document.getElementById('topbar').style.display = "flex";
     document.getElementById('queryTop').value = query;
 
-    resultsDiv.innerHTML = `<p style="color:#555;">Searching for: <b>${query}</b>...</p>`;
+    resultsDiv.innerHTML = `<p>Searching for: <b>${query}</b>...</p>`;
 
     try {
-      const response = await fetch(API_URL, {
+      const response = await fetch("http://localhost:3000/search", {
         method: "POST",
-        headers: {
-          "Authorization": `Bearer ${API_KEY}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          model: "command",
-          prompt: `You are Milkdromeda Search, an AI search engine.
-For the query: "${query}"
-1. If it is a single word, provide its definition in the overview.
-2. Otherwise, provide a 2–3 paragraph overview explaining the topic.
-3. Then return at least 10 high-quality links with short titles and real URLs.
-Format strictly as:
-
-OVERVIEW:
-[overview text]
-
-LINKS:
-1. [title] - [url]
-2. [title] - [url]
-...`,
-          max_tokens: 500,
-          temperature: 0.7
-        })
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query })
       });
 
       const data = await response.json();
-      const aiText = data.generations?.[0]?.text?.trim() || "No AI response.";
+      const aiText = data.generations?.[0]?.text?.trim();
 
-      // Always show raw AI text if parsing fails
-      if (!aiText.includes("LINKS:")) {
-        resultsDiv.innerHTML = `<pre>${aiText}</pre>`;
+      if (!aiText) {
+        resultsDiv.innerHTML = `<p style="color:red;">No AI response. Check backend logs.</p>`;
         return;
       }
 
-      const [overviewPart, linksPart] = aiText.split("LINKS:");
+      // Try to parse overview + links
+      const parts = aiText.split("LINKS:");
+      const overviewPart = parts[0]?.replace("OVERVIEW:", "").trim() || "";
+      const linksPart = parts[1] || "";
 
       let linksHTML = "";
-      if (linksPart) {
-        linksHTML = linksPart.split("\n").map(line => {
-          const match = line.match(/^\d+\.\s*(.+?)\s*-\s*(https?:\/\/\S+)/);
-          if (match) {
-            return `
-              <div class="result">
-                <a href="${match[2]}" target="_blank">${match[1]}</a>
-                <div class="url">${match[2]}</div>
-                <div class="snippet">AI suggested this as a relevant source.</div>
-              </div>`;
-          }
-          return "";
-        }).join("");
+      linksPart.split("\n").forEach(line => {
+        const match = line.match(/^\d+\.\s*(.+?)\s*-\s*(https?:\/\/\S+)/);
+        if (match) {
+          linksHTML += `
+            <div class="result">
+              <a href="${match[2]}" target="_blank">${match[1]}</a>
+              <div class="url">${match[2]}</div>
+              <div class="snippet">Suggested as a relevant source.</div>
+            </div>`;
+        }
+      });
+
+      // Fallback: if parsing fails, show raw text
+      if (!overviewPart && !linksHTML) {
+        resultsDiv.innerHTML = `<pre>${aiText}</pre>`;
+        return;
       }
 
       resultsDiv.innerHTML = `
         <div class="overview">
           <h2>AI Overview</h2>
-          <p>${overviewPart.replace("OVERVIEW:", "").trim()}</p>
+          <p>${overviewPart}</p>
         </div>
         ${linksHTML}
       `;
