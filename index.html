@@ -1,180 +1,259 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Milkdromeda Search</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Milkdromeda Search — Test Page</title>
+
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #fff;
-      color: #202124;
-    }
-    body.dark {
-      background: #121212;
-      color: #e0e0e0;
-    }
-
-    header {
-      text-align: center;
-      padding: 15vh 1em 2em;
-    }
-    .logo {
-      font-size: 3em;
-      font-weight: bold;
-      color: #4285f4;
-      font-family: "Product Sans", Arial, sans-serif;
-      margin-bottom: 1em;
+    :root{
+      --bg:#d9f0ff;
+      --border:#2b7fff;
+      --card-bg:#d9f0ff;
+      --text:#0f172a;
+      --accent:#1e3a8a;
+      --muted:#6b7280;
+      --success:#0ea5a4;
     }
 
-    .search-box input {
-      width: 50%;
-      padding: 0.8em 1em;
-      font-size: 1.1em;
-      border-radius: 24px;
-      border: 1px solid #dcdcdc;
-    }
-    .search-box button {
-      padding: 0.8em 1.5em;
-      margin-left: 1em;
-      border: none;
-      border-radius: 24px;
-      background: #4285f4;
-      color: #fff;
-      font-weight: bold;
-      cursor: pointer;
+    /* page */
+    html,body{height:100%;margin:0;font-family:Segoe UI,Arial,sans-serif;background:linear-gradient(180deg,#eaf6ff 0%, #d9f0ff 100%);color:var(--text);}
+    .wrap{max-width:980px;margin:28px auto;padding:20px;box-sizing:border-box}
+
+    /* card / bubble */
+    .card{
+      background:var(--card-bg);
+      border:2px solid var(--border);
+      border-radius:12px;
+      padding:18px;
+      box-shadow:0 6px 18px rgba(43,127,255,0.08);
     }
 
-    .topbar {
-      display: none;
-      padding: 1em;
-      border-bottom: 1px solid #eee;
-      text-align: center;
-      position: sticky;
-      top: 0;
-      background: inherit;
-      z-index: 10;
-    }
-    .topbar input {
-      width: 40%;
-      padding: 0.6em 1em;
-      font-size: 1em;
-      border-radius: 24px;
-      border: 1px solid #dcdcdc;
-    }
-    .topbar button {
-      padding: 0.6em 1.2em;
-      margin-left: 0.5em;
-      border: none;
-      border-radius: 24px;
-      background: #4285f4;
-      color: #fff;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    .mode-toggle {
-      margin-left: 1em;
-      cursor: pointer;
-      font-size: 1.2em;
-    }
+    /* header */
+    .brand{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+    .brand h1{font-size:18px;margin:0;color:var(--accent)}
+    .brand p{margin:0;font-size:13px;color:var(--muted)}
 
-    .results {
-      width: 60%;
-      margin: 2em auto;
-      display: none;
-    }
-    .overview {
-      margin-bottom: 2em;
-      border-bottom: 1px solid #eee;
-      padding-bottom: 1em;
-    }
-    .overview h2 {
-      font-size: 1.3em;
-      margin-bottom: 0.5em;
-    }
-    .result {
-      margin-bottom: 1.5em;
-    }
-    .result a {
-      font-size: 1.1em;
-      color: #1a0dab;
-      text-decoration: none;
-    }
-    .result a:hover {
-      text-decoration: underline;
-    }
-    .result .url {
-      font-size: 0.9em;
-      color: #006621;
-      margin: 0.2em 0;
-    }
-    .result .snippet {
-      font-size: 0.95em;
-      color: #4d5156;
-    }
-    body.dark-mode {
-  background-color: #121212;
-  color: #f0f0f0;
-}
+    /* message area */
+    .message{margin:12px 0 18px;font-size:14px;line-height:1.5;color:var(--text)}
+    .message p{margin:0 0 10px}
 
-.dark-mode a {
-  color: #80d0ff;
-}
+    /* controls */
+    .controls{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px}
+    .controls input[type="text"]{padding:8px 10px;border:1px solid #cbd5e1;border-radius:8px;min-width:220px}
+    .btn{
+      display:inline-block;padding:8px 12px;border-radius:8px;border:0;background:var(--border);color:#fff;cursor:pointer;font-weight:600;
+      box-shadow:0 4px 8px rgba(43,127,255,0.12);
+    }
+    .btn.secondary{background:#ffffff;color:var(--border);border:1px solid #cfe6ff}
+    .btn:active{transform:translateY(1px)}
 
-    body.dark .result a { color: #8ab4f8; }
-    body.dark .result .url { color: #81c995; }
-    body.dark .result .snippet { color: #aaa; }
+    /* results */
+    #results{margin-top:12px}
+    .result-item{padding:10px;border-radius:8px;background:rgba(255,255,255,0.6);margin-bottom:8px;border:1px solid rgba(11,18,32,0.04)}
+    .result-title{font-weight:700;color:var(--accent);font-size:14px}
+    .result-body{font-size:13px;color:var(--text);margin-top:6px}
+
+    /* footer */
+    .footer{margin-top:14px;border-top:1px solid #b6d8ff;padding-top:10px;font-size:12px;color:var(--muted)}
+    .social{display:flex;gap:12px;align-items:center;margin-top:8px}
+    .social img{display:block;height:28px}
+
+    /* dark mode */
+    body.dark-mode{
+      background:linear-gradient(180deg,#0b1220 0%, #071226 100%);
+      color:#dbeafe;
+    }
+    body.dark-mode .card{background:#0b1220;border-color:#234a86;box-shadow:none}
+    body.dark-mode .controls input[type="text"]{background:#071226;color:#dbeafe;border:1px solid #153049}
+    body.dark-mode .btn.secondary{background:#071226;color:#80cfff;border:1px solid #153049}
+    body.dark-mode .result-item{background:rgba(8,12,16,0.6);border:1px solid rgba(255,255,255,0.03)}
+    body.dark-mode .footer{border-top-color:#0f2a4a;color:#8fbce6}
+
+    /* accessibility */
+    @media (max-width:600px){
+      .controls{flex-direction:column}
+      .controls input[type="text"]{min-width:100%}
+    }
   </style>
 </head>
 <body>
-  <!-- Homepage -->
-  <header id="homeHeader">
-    <div class="logo">Milkdromeda Search</div>
-    <div class="search-box">
-      <input type="text" id="query" placeholder="Search the galaxy...">
-      <button onclick="search()">Search</button>
+  <div class="wrap">
+    <div class="card" id="bubble">
+      <div class="brand">
+        <!-- Optional logo: swap the src for your CDN logo -->
+        <!-- <img src="/assets/logo.png" alt="Milkdromeda logo" width="36" height="36" style="border-radius:6px"> -->
+        <div>
+          <h1>Milkdromeda Studios</h1>
+          <p>Crafting original Minecraft & Roblox worlds with pixel‑perfect design and creative automation.</p>
+        </div>
+      </div>
+
+      <div class="message" id="message">
+        <p>Hello — type a query below to get an AI overview or a search of resources. The result will appear inside this card so you don't have to paste the signature every time.</p>
+      </div>
+
+      <div class="controls" aria-label="search controls">
+        <input id="query" type="text" placeholder="Ask about Blade Ball, Void Sword, or your project..." />
+        <button id="overview-btn" class="btn" type="button">AI Overview</button>
+        <button id="search-btn" class="btn secondary" type="button">Search</button>
+        <button id="dark-mode-toggle" class="btn" type="button" aria-pressed="false">Toggle Dark Mode</button>
+        <button id="clear-btn" class="btn secondary" type="button">Clear</button>
+      </div>
+
+      <div id="results" aria-live="polite"></div>
+
+      <div class="footer">
+        <div class="social">
+          <a href="https://www.youtube.com/@MilkdrinedaStudios" target="_blank" rel="noopener">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/YouTube_Logo_2017.svg" alt="YouTube">
+          </a>
+          <a href="https://milkdromedagamez.itch.io/" target="_blank" rel="noopener">
+            <img src="https://itch.io/static/images/itchio-textless-black.svg" alt="itch.io" style="height:30px;background:#fa5c5c;border-radius:6px;padding:6px;">
+          </a>
+        </div>
+        <div style="margin-top:8px">© <span id="year"></span> Milkdromeda Studios. All rights reserved.</div>
+      </div>
     </div>
-  </header>
-
-  <!-- Topbar after search -->
-  <div class="topbar" id="topbar">
-    <input type="text" id="queryTop" placeholder="Search again..." onkeydown="if(event.key==='Enter'){search(true)}">
-    <button onclick="search(true)">Search</button>
-    <button id="dark-mode-toggle">Toggle Dark Mode</button>
-
   </div>
 
-  <!-- Results -->
-  <div class="results" id="results"></div>
-<script>
-async function getOverview(query) {
-  const response = await fetch('/api/overview', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ query })
-  });
-  const data = await response.json();
-  document.getElementById('overview').textContent = data.result || 'No overview found.';
-}
+  <script>
+    // --- Helpers
+    const $ = id => document.getElementById(id);
+    const setYear = () => { $('year').textContent = new Date().getFullYear(); };
+    setYear();
 
-async function getSearchResults(query) {
-  const response = await fetch('/api/search', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ query })
-  });
-  const data = await response.json();
-  const container = document.getElementById('search-results');
-  container.innerHTML = '';
-  data.results.forEach(item => {
-    const div = document.createElement('div');
-    div.textContent = item;
-    container.appendChild(div);
-  });
-}
-  document.getElementById('dark-mode-toggle').addEventListener('click', () => {
-  document.body.classList.toggle('dark-mode');
-});
-</script>
+    // --- UI functions
+    function setLoading(state, text = 'Working...') {
+      const container = $('results');
+      if (state) {
+        container.innerHTML = '<div class="result-item"><div class="result-title">Loading</div><div class="result-body">' + text + '</div></div>';
+      }
+    }
+    function showError(err) {
+      const container = $('results');
+      container.innerHTML = '<div class="result-item" style="border-left:3px solid #f87171"><div class="result-title">Error</div><div class="result-body">'+ (err?.message || String(err)) +'</div></div>';
+      console.error(err);
+    }
+    function showResults(items, title = 'Results') {
+      const container = $('results');
+      if (!items || items.length === 0) {
+        container.innerHTML = '<div class="result-item"><div class="result-title">No results</div><div class="result-body">Try a different query.</div></div>';
+        return;
+      }
+      container.innerHTML = items.map(i => 
+        `<div class="result-item"><div class="result-title">${escapeHtml(i.title || i)}</div>` +
+        `<div class="result-body">${escapeHtml(i.text || i.description || i)}</div></div>`
+      ).join('');
+    }
+    function escapeHtml(s){ if(typeof s !== 'string') return s; return s.replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+    // --- API calls to backend (secure: backend must use API_KEY)
+    async function callApi(path, body){
+      try {
+        const res = await fetch(path, {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify(body),
+        });
+        if (!res.ok) {
+          const text = await res.text().catch(()=>null);
+          throw new Error('Server error: ' + res.status + (text ? ' - ' + text : ''));
+        }
+        return await res.json();
+      } catch(err) { throw err; }
+    }
+
+    async function handleOverview() {
+      const q = $('query').value.trim();
+      if(!q) { showError(new Error('Type a query first.')); return; }
+      setLoading(true, 'Generating overview...');
+      try {
+        const data = await callApi('/api/overview', { query: q });
+        // Expect { result: "..." } or similar
+        const resultText = data?.result || data?.summary || JSON.stringify(data);
+        showResults([{ title: 'Overview', text: resultText }]);
+      } catch(err) { showError(err); }
+    }
+
+    async function handleSearch() {
+      const q = $('query').value.trim();
+      if(!q) { showError(new Error('Type a query first.')); return; }
+      setLoading(true, 'Searching for resources...');
+      try {
+        const data = await callApi('/api/search', { query: q });
+        // Expect { results: [ "item1", {title, description}, ... ] }
+        const results = (Array.isArray(data?.results) ? data.results : (Array.isArray(data) ? data : []));
+        // Normalize into objects with title/text
+        const normalized = results.map(r => {
+          if (typeof r === 'string') return { title: r, text: '' };
+          return { title: r.title || r.name || (r.link || 'Result'), text: r.text || r.description || r.snippet || (r.link || '') };
+        });
+        showResults(normalized, 'Search Results');
+      } catch(err) { showError(err); }
+    }
+
+    // --- Dark mode toggle (works reliably)
+    const darkToggle = $('dark-mode-toggle');
+    function updateDarkAria(){
+      const pressed = document.body.classList.contains('dark-mode');
+      darkToggle.setAttribute('aria-pressed', pressed ? 'true' : 'false');
+      darkToggle.textContent = pressed ? 'Light Mode' : 'Dark Mode';
+    }
+    // restore preference
+    (function restorePref(){
+      try {
+        const pref = localStorage.getItem('mm-dark');
+        if (pref === '1') document.body.classList.add('dark-mode');
+      } catch(e){}
+      updateDarkAria();
+    })();
+
+    darkToggle.addEventListener('click', () => {
+      document.body.classList.toggle('dark-mode');
+      try {
+        const on = document.body.classList.contains('dark-mode');
+        localStorage.setItem('mm-dark', on ? '1' : '0');
+      } catch(e){}
+      updateDarkAria();
+    });
+
+    // --- other UI wiring
+    $('overview-btn').addEventListener('click', handleOverview);
+    $('search-btn').addEventListener('click', handleSearch);
+    $('clear-btn').addEventListener('click', () => {
+      $('query').value = '';
+      $('results').innerHTML = '';
+    });
+
+    // Keyboard: Enter triggers overview
+    $('query').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleOverview();
+      }
+      // Shift+Enter for search
+      if (e.key === 'Enter' && e.shiftKey) {
+        e.preventDefault();
+        handleSearch();
+      }
+    });
+
+    // --- quick dev helper: show backend status when page loads
+    (async function checkBackend(){
+      try {
+        const res = await fetch('/api/health', { method: 'GET' }).catch(()=>null);
+        if (!res) return;
+        if (res.ok){
+          const el = document.createElement('div');
+          el.className = 'result-item';
+          el.innerHTML = '<div class="result-title">Backend</div><div class="result-body">Connected</div>';
+          const container = $('results');
+          container.insertAdjacentElement('afterbegin', el);
+        }
+      } catch(e){}
+    })();
+
+  </script>
 </body>
 </html>
