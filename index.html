@@ -11,20 +11,22 @@
       margin: 0;
       padding: 0;
     }
+
+    /* Homepage header */
     header {
       text-align: center;
-      padding: 10vh 1em 2em;
+      padding: 15vh 1em 2em;
     }
     .logo {
       font-size: 3em;
       font-weight: bold;
       color: #4285f4;
       font-family: "Product Sans", Arial, sans-serif;
+      margin-bottom: 1em;
     }
-    .search-box {
-      margin-top: 2em;
-    }
-    input[type="text"] {
+
+    /* Search bar */
+    .search-box input {
       width: 50%;
       padding: 0.8em 1em;
       font-size: 1.1em;
@@ -33,10 +35,10 @@
       outline: none;
       transition: box-shadow 0.2s;
     }
-    input[type="text"]:focus {
+    .search-box input:focus {
       box-shadow: 0 0 5px rgba(66,133,244,0.6);
     }
-    button {
+    .search-box button {
       padding: 0.8em 1.5em;
       margin-left: 1em;
       border: none;
@@ -46,6 +48,37 @@
       font-weight: bold;
       cursor: pointer;
     }
+
+    /* Top bar after search */
+    .topbar {
+      display: none;
+      padding: 1em;
+      border-bottom: 1px solid #eee;
+      text-align: center;
+      position: sticky;
+      top: 0;
+      background: #fff;
+      z-index: 10;
+    }
+    .topbar input {
+      width: 40%;
+      padding: 0.6em 1em;
+      font-size: 1em;
+      border-radius: 24px;
+      border: 1px solid #dcdcdc;
+    }
+    .topbar button {
+      padding: 0.6em 1.2em;
+      margin-left: 0.5em;
+      border: none;
+      border-radius: 24px;
+      background: #4285f4;
+      color: #fff;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    /* Results */
     .results {
       width: 60%;
       margin: 2em auto;
@@ -74,24 +107,16 @@
     .result .url {
       font-size: 0.9em;
       color: #006621;
+      margin: 0.2em 0;
     }
     .result .snippet {
       font-size: 0.95em;
       color: #4d5156;
     }
-    /* Top bar after search */
-    .topbar {
-      display: none;
-      padding: 1em;
-      border-bottom: 1px solid #eee;
-      text-align: center;
-    }
-    .topbar input {
-      width: 40%;
-    }
   </style>
 </head>
 <body>
+  <!-- Homepage -->
   <header id="homeHeader">
     <div class="logo">Milkdromeda</div>
     <div class="search-box">
@@ -100,16 +125,18 @@
     </div>
   </header>
 
+  <!-- Topbar after search -->
   <div class="topbar" id="topbar">
     <input type="text" id="queryTop" placeholder="Search again..." onkeydown="if(event.key==='Enter'){search(true)}">
     <button onclick="search(true)">Search</button>
   </div>
 
+  <!-- Results -->
   <div class="results" id="results"></div>
 
   <script>
     const API_URL = "https://api.cohere.ai/v1/generate";
-    const API_KEY = "YOUR_API_KEY_HERE"; // replace with your Cohere key
+    const API_KEY = "AyJw0s2qsoVi5VTYiir8i19Wx4ZJysCawiQtHXpJ"; // replace with your Cohere key
 
     async function search(fromTop=false) {
       const query = fromTop ? document.getElementById('queryTop').value : document.getElementById('query').value;
@@ -152,6 +179,12 @@ LINKS:
         const data = await response.json();
         const aiText = data.generations?.[0]?.text?.trim() || "No AI response.";
 
+        // Debug: show raw AI text if parsing fails
+        if (!aiText.includes("LINKS:")) {
+          resultsDiv.innerHTML = `<pre>${aiText}</pre>`;
+          return;
+        }
+
         const [overviewPart, linksPart] = aiText.split("LINKS:");
 
         let linksHTML = "";
@@ -159,13 +192,11 @@ LINKS:
           linksHTML = linksPart.split("\n").map(line => {
             const match = line.match(/^\d+\.\s*(.+?)\s*-\s*(https?:\/\/\S+)/);
             if (match) {
-              // Instead of real URL, use hash format
-              const fakeUrl = `#searchinfo=${encodeURIComponent(match[1].toLowerCase().replace(/\s+/g,"%"))}`;
               return `
                 <div class="result">
-                  <a href="${fakeUrl}">${match[1]}</a>
-                  <div class="url">${fakeUrl}</div>
-                  <div class="snippet">${match[2]}</div>
+                  <a href="${match[2]}" target="_blank">${match[1]}</a>
+                  <div class="url">${match[2]}</div>
+                  <div class="snippet">AI suggested this as a relevant source.</div>
                 </div>`;
             }
             return "";
