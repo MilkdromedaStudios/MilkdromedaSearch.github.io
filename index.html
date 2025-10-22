@@ -5,14 +5,16 @@
   <title>Milkdromeda Search</title>
   <style>
     body {
+      margin: 0;
+      font-family: Arial, sans-serif;
       background: #fff;
       color: #202124;
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
+    }
+    body.dark {
+      background: #121212;
+      color: #e0e0e0;
     }
 
-    /* Homepage header */
     header {
       text-align: center;
       padding: 15vh 1em 2em;
@@ -25,18 +27,12 @@
       margin-bottom: 1em;
     }
 
-    /* Search bar */
     .search-box input {
       width: 50%;
       padding: 0.8em 1em;
       font-size: 1.1em;
       border-radius: 24px;
       border: 1px solid #dcdcdc;
-      outline: none;
-      transition: box-shadow 0.2s;
-    }
-    .search-box input:focus {
-      box-shadow: 0 0 5px rgba(66,133,244,0.6);
     }
     .search-box button {
       padding: 0.8em 1.5em;
@@ -49,7 +45,6 @@
       cursor: pointer;
     }
 
-    /* Top bar after search */
     .topbar {
       display: none;
       padding: 1em;
@@ -57,7 +52,7 @@
       text-align: center;
       position: sticky;
       top: 0;
-      background: #fff;
+      background: inherit;
       z-index: 10;
     }
     .topbar input {
@@ -77,8 +72,12 @@
       font-weight: bold;
       cursor: pointer;
     }
+    .mode-toggle {
+      margin-left: 1em;
+      cursor: pointer;
+      font-size: 1.2em;
+    }
 
-    /* Results */
     .results {
       width: 60%;
       margin: 2em auto;
@@ -113,6 +112,9 @@
       font-size: 0.95em;
       color: #4d5156;
     }
+    body.dark .result a { color: #8ab4f8; }
+    body.dark .result .url { color: #81c995; }
+    body.dark .result .snippet { color: #aaa; }
   </style>
 </head>
 <body>
@@ -129,35 +131,67 @@
   <div class="topbar" id="topbar">
     <input type="text" id="queryTop" placeholder="Search again..." onkeydown="if(event.key==='Enter'){search(true)}">
     <button onclick="search(true)">Search</button>
+    <span class="mode-toggle" onclick="toggleMode()">🌙</span>
   </div>
 
   <!-- Results -->
   <div class="results" id="results"></div>
+<script>
+  const API_URL = "https://api.cohere.ai/v1/generate";
+  const API_KEY = "YOUR_API_KEY_HERE"; // replace with your Cohere key
 
-  <script>
-    const API_URL = "https://api.cohere.ai/v1/generate";
-    const API_KEY = "AyJw0s2qsoVi5VTYiir8i19Wx4ZJysCawiQtHXpJ"; // replace with your Cohere key
+  // --- Dark/Light Mode with Cookies ---
+  function setCookie(name, value, days) {
+    const d = new Date();
+    d.setTime(d.getTime() + (days*24*60*60*1000));
+    document.cookie = name + "=" + value + ";expires=" + d.toUTCString() + ";path=/";
+  }
+  function getCookie(name) {
+    const cname = name + "=";
+    const decoded = decodeURIComponent(document.cookie);
+    const ca = decoded.split(';');
+    for(let c of ca) {
+      while (c.charAt(0) === ' ') c = c.substring(1);
+      if (c.indexOf(cname) === 0) return c.substring(cname.length, c.length);
+    }
+    return "";
+  }
+  function toggleMode() {
+    document.body.classList.toggle("dark");
+    const isDark = document.body.classList.contains("dark");
+    setCookie("mode", isDark ? "dark" : "light", 365);
+    document.querySelector(".mode-toggle").textContent = isDark ? "☀️" : "🌙";
+  }
+  function loadMode() {
+    const mode = getCookie("mode");
+    if (mode === "dark") {
+      document.body.classList.add("dark");
+      document.querySelector(".mode-toggle").textContent = "☀️";
+    }
+  }
+  loadMode();
 
-    async function search(fromTop=false) {
-      const query = fromTop ? document.getElementById('queryTop').value : document.getElementById('query').value;
-      const resultsDiv = document.getElementById('results');
-      resultsDiv.style.display = "block";
-      document.getElementById('homeHeader').style.display = "none";
-      document.getElementById('topbar').style.display = "block";
-      document.getElementById('queryTop').value = query;
+  // --- Search Function ---
+  async function search(fromTop=false) {
+    const query = fromTop ? document.getElementById('queryTop').value : document.getElementById('query').value;
+    const resultsDiv = document.getElementById('results');
+    resultsDiv.style.display = "block";
+    document.getElementById('homeHeader').style.display = "none";
+    document.getElementById('topbar').style.display = "block";
+    document.getElementById('queryTop').value = query;
 
-      resultsDiv.innerHTML = `<p style="color:#555;">Searching for: <b>${query}</b>...</p>`;
+    resultsDiv.innerHTML = `<p style="color:#555;">Searching for: <b>${query}</b>...</p>`;
 
-      try {
-        const response = await fetch(API_URL, {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${API_KEY}`,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            model: "command",
-            prompt: `You are Milkdromeda Search, an AI search engine.
+    try {
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${API_KEY}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model: "command",
+          prompt: `You are Milkdromeda Search, an AI search engine.
 For the query: "${query}"
 1. If it is a single word, provide its definition in the overview.
 2. Otherwise, provide a 2–3 paragraph overview explaining the topic.
@@ -171,49 +205,49 @@ LINKS:
 1. [title] - [url]
 2. [title] - [url]
 ...`,
-            max_tokens: 500,
-            temperature: 0.7
-          })
-        });
+          max_tokens: 500,
+          temperature: 0.7
+        })
+      });
 
-        const data = await response.json();
-        const aiText = data.generations?.[0]?.text?.trim() || "No AI response.";
+      const data = await response.json();
+      const aiText = data.generations?.[0]?.text?.trim() || "No AI response.";
 
-        // Debug: show raw AI text if parsing fails
-        if (!aiText.includes("LINKS:")) {
-          resultsDiv.innerHTML = `<pre>${aiText}</pre>`;
-          return;
-        }
-
-        const [overviewPart, linksPart] = aiText.split("LINKS:");
-
-        let linksHTML = "";
-        if (linksPart) {
-          linksHTML = linksPart.split("\n").map(line => {
-            const match = line.match(/^\d+\.\s*(.+?)\s*-\s*(https?:\/\/\S+)/);
-            if (match) {
-              return `
-                <div class="result">
-                  <a href="${match[2]}" target="_blank">${match[1]}</a>
-                  <div class="url">${match[2]}</div>
-                  <div class="snippet">AI suggested this as a relevant source.</div>
-                </div>`;
-            }
-            return "";
-          }).join("");
-        }
-
-        resultsDiv.innerHTML = `
-          <div class="overview">
-            <h2>AI Overview</h2>
-            <p>${overviewPart.replace("OVERVIEW:", "").trim()}</p>
-          </div>
-          ${linksHTML}
-        `;
-      } catch (err) {
-        resultsDiv.innerHTML = `<p style="color:red;">Error: ${err.message}</p>`;
+      // Always show raw AI text if parsing fails
+      if (!aiText.includes("LINKS:")) {
+        resultsDiv.innerHTML = `<pre>${aiText}</pre>`;
+        return;
       }
+
+      const [overviewPart, linksPart] = aiText.split("LINKS:");
+
+      let linksHTML = "";
+      if (linksPart) {
+        linksHTML = linksPart.split("\n").map(line => {
+          const match = line.match(/^\d+\.\s*(.+?)\s*-\s*(https?:\/\/\S+)/);
+          if (match) {
+            return `
+              <div class="result">
+                <a href="${match[2]}" target="_blank">${match[1]}</a>
+                <div class="url">${match[2]}</div>
+                <div class="snippet">AI suggested this as a relevant source.</div>
+              </div>`;
+          }
+          return "";
+        }).join("");
+      }
+
+      resultsDiv.innerHTML = `
+        <div class="overview">
+          <h2>AI Overview</h2>
+          <p>${overviewPart.replace("OVERVIEW:", "").trim()}</p>
+        </div>
+        ${linksHTML}
+      `;
+    } catch (err) {
+      resultsDiv.innerHTML = `<p style="color:red;">Error: ${err.message}</p>`;
     }
-  </script>
+  }
+</script>
 </body>
 </html>
