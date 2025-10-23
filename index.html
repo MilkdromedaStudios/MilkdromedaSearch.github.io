@@ -3,302 +3,228 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Milkdromeda Search — Live</title>
-
+  <title>Milkdromeda Search</title>
   <style>
     :root{
-      --page-bg: #e6f8ff;      /* lighter blue page background */
-      --card-bg: #eef9ff;      /* card background (soft) */
-      --accent: #2b7fff;       /* bright blue accent */
+      --page-bg: #f3f6fb;     /* soft neutral light background */
+      --card-bg: #ffffff;     /* white card */
+      --accent: #0078d4;      /* Bing-like blue */
       --muted: #6b7280;
-      --text: #062034;
-      --card-shadow: rgba(43,127,255,0.08);
-      --link-bg: #ffffff;
+      --text: #0b2336;
+      --surface: #f7fafc;
+      --border: rgba(11,35,54,0.06);
     }
 
-    /* Page */
-    html,body{height:100%;margin:0;font-family:"Segoe UI",system-ui,Arial,sans-serif;background:var(--page-bg);color:var(--text)}
-    .wrap{max-width:980px;margin:36px auto;padding:20px;box-sizing:border-box}
+    /* page */
+    html,body{height:100%;margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--page-bg);color:var(--text)}
+    .wrap{max-width:1040px;margin:40px auto;padding:20px;box-sizing:border-box}
 
-    /* clean card style (not email-like) */
+    /* card */
     .card{
-      background: linear-gradient(180deg,var(--card-bg),#e6f8ff);
-      border-radius:14px;
-      padding:18px;
-      box-shadow:0 10px 30px var(--card-shadow);
-      border:1px solid rgba(43,127,255,0.12);
+      background:var(--card-bg);
+      border-radius:12px;
+      padding:20px;
+      box-shadow:0 6px 18px rgba(11,35,54,0.04);
+      border:1px solid var(--border);
     }
-    .header{display:flex;align-items:center;gap:14px;margin-bottom:10px}
-    .brand-title{font-size:20px;margin:0;color:var(--accent);letter-spacing:0.2px}
-    .brand-sub{margin:0;font-size:13px;color:var(--muted)}
 
-    /* input + controls */
-    .controls{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}
+    /* header */
+    .header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .brand h1{margin:0;font-size:20px;color:var(--accent);letter-spacing:0.2px}
+    .brand p{margin:0;font-size:13px;color:var(--muted)}
+
+    /* controls */
+    .controls{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px}
     .controls input[type="text"]{
-      flex:1;min-width:220px;padding:10px 12px;border-radius:10px;border:1px solid rgba(6,32,52,0.06);font-size:14px;background:var(--link-bg)
+      flex:1;min-width:260px;padding:12px 14px;border-radius:8px;border:1px solid var(--border);font-size:15px;background:var(--surface)
     }
-    .btn{padding:9px 13px;border-radius:10px;border:0;cursor:pointer;font-weight:700}
+    .btn{padding:10px 14px;border-radius:8px;border:0;cursor:pointer;font-weight:700}
     .btn.primary{background:var(--accent);color:#fff}
-    .btn.ghost{background:transparent;color:var(--accent);border:1px solid rgba(43,127,255,0.12)}
-    .btn.weak{background:#fff;color:var(--muted);border:1px solid rgba(6,32,52,0.04)}
+    .btn.ghost{background:transparent;color:var(--accent);border:1px solid rgba(0,120,212,0.12)}
 
-    /* layout for results */
-    .sections{display:grid;grid-template-columns:1fr 320px;gap:18px}
-    @media (max-width:880px){ .sections{grid-template-columns:1fr} }
+    /* layout */
+    .grid{display:grid;grid-template-columns:1fr 320px;gap:18px}
+    @media (max-width:880px){ .grid{grid-template-columns:1fr} }
 
-    .panel{background:rgba(255,255,255,0.7);border-radius:10px;padding:12px;border:1px solid rgba(6,32,52,0.03)}
+    .panel{background:var(--card-bg);border-radius:10px;padding:14px;border:1px solid var(--border)}
     .panel h3{margin:0 0 8px 0;font-size:15px;color:var(--accent)}
-    .panel p.lead{margin:0 0 10px;font-size:14px;color:var(--text)}
+    .lead{margin:0 0 10px 0;color:var(--muted);font-size:13px}
 
-    .overview-box{min-height:80px;padding:10px;border-radius:8px;background:linear-gradient(180deg,#ffffff,#f6fdff);font-size:14px;color:var(--text)}
-    .links-list{display:flex;flex-direction:column;gap:10px}
-    .link-item{padding:10px;border-radius:8px;background:#ffffff;border:1px solid rgba(6,32,52,0.04)}
-    .link-item .title{font-weight:700;color:#0d4aa0;font-size:14px}
-    .link-item .desc{font-size:13px;color:var(--muted);margin-top:6px}
+    .overview{min-height:96px;padding:12px;border-radius:8px;background:var(--surface);font-size:14px;color:var(--text)}
+    .links{display:flex;flex-direction:column;gap:10px}
+    .link{padding:10px;border-radius:8px;background:#ffffff;border:1px solid var(--border)}
+    .link .title{font-weight:700;color:#0b3b66;font-size:14px}
+    .link .desc{margin-top:6px;color:var(--muted);font-size:13px}
 
-    .footer{margin-top:16px;font-size:12px;color:var(--muted);display:flex;justify-content:space-between;align-items:center}
+    .footer{margin-top:16px;font-size:12px;color:var(--muted);display:flex;justify-content:space-between}
 
-    /* dark mode */
+    /* dark mode: solid colors only, no gradients */
     body.dark-mode{
-      --page-bg: linear-gradient(180deg,#071226,#041226);
-      --card-bg: #071226;
-      --accent: #7fbcff;
-      --muted: #88b6d9;
-      --text: #e6f8ff;
-      --card-shadow: rgba(0,0,0,0.45);
-      --link-bg: #071226;
+      --page-bg: #0b1016;
+      --card-bg: #07101a;
+      --accent: #4aa3ff;
+      --muted: #9bbfe6;
+      --text: #e6f6ff;
+      --surface: #05121a;
+      --border: rgba(74,163,255,0.08);
     }
-    body.dark-mode .card{box-shadow:0 6px 20px rgba(0,0,0,0.5)}
-    body.dark-mode .panel{background:rgba(8,12,18,0.4);border:1px solid rgba(127,192,255,0.06)}
-    body.dark-mode .overview-box{background:linear-gradient(180deg,#081424,#041324)}
-    body.dark-mode .link-item{background:rgba(8,12,18,0.45);border:1px solid rgba(255,255,255,0.03)}
-    body.dark-mode .controls input[type="text"]{background:rgba(255,255,255,0.03);border:1px solid rgba(127,192,255,0.06);color:var(--text)}
-    body.dark-mode .btn.ghost{color:var(--accent)}
-    body.dark-mode .brand-sub{color:var(--muted)}
-    body.dark-mode .footer{color:var(--muted)}
-
-    /* subtle utilities */
-    .muted{color:var(--muted);font-size:13px}
-    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+    body.dark-mode .card{box-shadow:none;border:1px solid rgba(255,255,255,0.03)}
+    body.dark-mode .controls input[type="text"]{background:var(--surface);border:1px solid rgba(255,255,255,0.04);color:var(--text)}
+    body.dark-mode .link{background:var(--surface);border:1px solid rgba(255,255,255,0.03)}
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="card" id="card">
+    <div class="card" role="main">
       <div class="header">
-        <div>
-          <h1 class="brand-title">Milkdromeda Studios</h1>
-          <p class="brand-sub">Search & AI tools for Minecraft, Roblox, and studio notes</p>
+        <div class="brand">
+          <div>
+            <h1>Milkdromeda Search</h1>
+            <p>Fast search and AI summaries for your studio notes and game topics</p>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:8px;align-items:center">
+          <button id="dark-mode-toggle" class="btn ghost" aria-pressed="false" type="button">Dark Mode</button>
         </div>
       </div>
 
-      <div class="controls" role="search" aria-label="Site search">
-        <input id="query" type="text" placeholder="Search: Blade Ball, Void Sword, AFK farms..." aria-label="query input" />
+      <div class="controls" role="search" aria-label="site search">
+        <input id="query" type="text" placeholder="Search (e.g. Blade Ball Void Sword AFK farm)" aria-label="query input" />
         <button id="search-btn" class="btn primary" type="button">Search</button>
-        <button id="dark-mode-toggle" class="btn ghost" type="button" aria-pressed="false">Dark Mode</button>
-        <button id="clear-btn" class="btn weak" type="button">Clear</button>
+        <button id="clear-btn" class="btn ghost" type="button">Clear</button>
       </div>
 
-      <div class="sections">
+      <div class="grid">
         <div>
-          <div class="panel">
+          <div class="panel" aria-live="polite">
             <h3>AI Overview</h3>
-            <p class="lead muted">A concise AI-generated summary for the query appears here first.</p>
-            <div id="overview" class="overview-box" aria-live="polite">No overview yet. Type a query and press Search.</div>
+            <p class="lead">Short AI-generated summary appears here first.</p>
+            <div id="overview" class="overview">No overview yet. Enter a query and press Search.</div>
           </div>
 
-          <div style="height:12px"></div>
+          <div style="height:14px"></div>
 
           <div class="panel">
-            <h3>Links with Descriptions</h3>
-            <p class="lead muted">AI-curated links and short descriptions related to the query.</p>
-            <div id="links" class="links-list"></div>
+            <h3>Links with descriptions</h3>
+            <p class="lead">AI-curated links and short descriptions.</p>
+            <div id="links" class="links"></div>
           </div>
         </div>
 
         <aside>
           <div class="panel">
             <h3>Quick actions</h3>
-            <p class="muted">Use Enter to search. Shift+Enter forces a search variations call.</p>
+            <p class="lead">Download results or check backend status.</p>
             <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
-              <button id="download-btn" class="btn ghost" type="button">Download Results (JSON)</button>
-              <button id="test-backend" class="btn weak" type="button">Check Backend</button>
+              <button id="download-btn" class="btn ghost" type="button">Download JSON</button>
+              <button id="test-backend" class="btn ghost" type="button">Check Backend</button>
             </div>
           </div>
 
-          <div style="height:12px"></div>
+          <div style="height:14px"></div>
 
           <div class="panel">
             <h3>About</h3>
-            <p class="muted">© <span id="year"></span> Milkdromeda Studios. All rights reserved.</p>
+            <p class="lead">© <span id="year"></span> Milkdromeda Studios</p>
           </div>
         </aside>
       </div>
 
       <div class="footer">
-        <div class="muted">Milkdromeda Search UI</div>
-        <div class="muted">Built with a secure backend</div>
+        <div>Milkdromeda Search UI</div>
+        <div>Secure backend required</div>
       </div>
     </div>
   </div>
 
   <script>
-    // Minimal DOM helpers
+    // basic helpers
     const $ = id => document.getElementById(id);
     $('year').textContent = new Date().getFullYear();
 
-    // Robust fetch wrapper: handle empty/non-JSON responses gracefully
-    async function safeJsonFetch(path, body = null, opts = {}) {
-      const fetchOpts = {
-        method: body ? 'POST' : 'GET',
-        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-        ...(body ? { body: JSON.stringify(body) } : {}),
-        ...opts
-      };
-      const res = await fetch(path, fetchOpts);
-      // if no content (204) or length 0, return null
+    // safe fetch: handles empty/non-JSON responses
+    async function safeJsonFetch(path, body=null) {
+      const opts = body ? {
+        method: 'POST',
+        headers: { 'Accept': 'application/json', 'Content-Type':'application/json' },
+        body: JSON.stringify(body)
+      } : { method: 'GET' };
+      const res = await fetch(path, opts);
       if (res.status === 204) return null;
-      // if response has no body length, try text then parse if non-empty
       const text = await res.text().catch(()=>null);
-      if (!text) {
-        // empty body — treat as no data, but not JSON parse error
-        return null;
-      }
-      try {
-        return JSON.parse(text);
-      } catch(e) {
-        // server returned non-JSON text — return as { text }
-        return { text };
-      }
+      if (!text) return null;
+      try { return JSON.parse(text); } catch(e) { return { text }; }
     }
 
-    // UI helpers
     function setOverview(text) { $('overview').textContent = text || 'No overview available.'; }
-    function setLinks(items) {
-      const el = $('links');
-      el.innerHTML = '';
-      if (!items || items.length === 0) {
-        el.innerHTML = '<div class="muted">No links found for this query.</div>';
-        return;
-      }
-      items.forEach(item => {
-        const title = item.title || item.name || item.link || 'Untitled';
-        const desc = item.description || item.text || item.snippet || '';
-        const node = document.createElement('div');
-        node.className = 'link-item';
-        node.innerHTML = '<div class="title">' + escapeHtml(title) + '</div>' +
-                         (desc ? '<div class="desc">' + escapeHtml(desc) + '</div>' : '');
-        el.appendChild(node);
+    function setLinks(list) {
+      const out = $('links');
+      out.innerHTML = '';
+      if (!list || list.length === 0) { out.innerHTML = '<div class="lead">No links found.</div>'; return; }
+      list.forEach(it => {
+        const title = it.title || it.name || (typeof it === 'string' ? it : 'Result');
+        const desc = it.description || it.text || it.snippet || '';
+        const el = document.createElement('div');
+        el.className = 'link';
+        el.innerHTML = `<div class="title">${escapeHtml(title)}</div>` + (desc ? `<div class="desc">${escapeHtml(desc)}</div>` : '');
+        out.appendChild(el);
       });
     }
     function escapeHtml(s){ if(!s && s !== 0) return ''; return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
-    // single handler: Search -> fills Overview and Links sections
-    async function handleSearch() {
+    // unified search that fills overview then links
+    async function doSearch(){
       const q = $('query').value.trim();
       if (!q) { setOverview('Type a query first.'); setLinks([]); return; }
 
       setOverview('Generating overview...');
       setLinks([]);
       try {
-        // overview call
         const ov = await safeJsonFetch('/api/overview', { query: q });
-        // normalize overview text
-        const overviewText = ov?.result || ov?.summary || ov?.text || (typeof ov === 'string' ? ov : null) || 'No overview returned.';
-        setOverview(overviewText);
+        const text = ov?.result || ov?.summary || ov?.text || (typeof ov === 'string' ? ov : null) || 'No overview returned.';
+        setOverview(text);
 
-        // links call
         const lk = await safeJsonFetch('/api/search', { query: q });
-        // normalize to array of items
         let items = [];
-        if (!lk) {
-          items = [];
-        } else if (Array.isArray(lk)) {
-          items = lk;
-        } else if (Array.isArray(lk.results)) {
-          items = lk.results;
-        } else if (lk.items) {
-          items = lk.items;
-        } else if (lk.text && typeof lk.text === 'string') {
-          // fallback: put the returned text as a single item
-          items = [{ title: 'Result', description: lk.text }];
-        } else {
-          items = [];
-        }
-        // map strings to objects
-        items = items.map(it => typeof it === 'string' ? { title: it, description: '' } : it);
+        if (!lk) items = [];
+        else if (Array.isArray(lk)) items = lk;
+        else if (Array.isArray(lk.results)) items = lk.results;
+        else if (lk.items) items = lk.items;
+        else if (lk.text) items = [{ title: 'Result', description: lk.text }];
+        items = items.map(i => typeof i === 'string' ? { title: i, description: '' } : i);
         setLinks(items);
-      } catch (err) {
-        // handle network/parsing errors
-        setOverview('Error: ' + (err?.message || 'Unknown error'));
+      } catch(err){
+        setOverview('Error: ' + (err?.message || 'Unknown'));
         setLinks([]);
-        console.error('Search error', err);
+        console.error(err);
       }
     }
 
-    // Dark mode toggle (reliable + persists)
-    const darkToggle = $('dark-mode-toggle');
-    function updateDarkLabel() {
-      const on = document.body.classList.contains('dark-mode');
-      darkToggle.setAttribute('aria-pressed', on ? 'true' : 'false');
-      darkToggle.textContent = on ? 'Light Mode' : 'Dark Mode';
-    }
-    (function restore() {
-      try {
-        if (localStorage.getItem('mm-dark') === '1') document.body.classList.add('dark-mode');
-      } catch(e){}
-      updateDarkLabel();
-    })();
-    darkToggle.addEventListener('click', () => {
-      const on = document.body.classList.toggle('dark-mode');
-      try { localStorage.setItem('mm-dark', on ? '1' : '0'); } catch(e){}
-      updateDarkLabel();
-    });
+    // dark mode toggle (no gradients)
+    const dm = $('dark-mode-toggle');
+    function updateDarkLabel(){ const on = document.body.classList.contains('dark-mode'); dm.setAttribute('aria-pressed', on? 'true':'false'); dm.textContent = on? 'Light Mode' : 'Dark Mode'; }
+    (function restore(){ try { if (localStorage.getItem('mm-dark') === '1') document.body.classList.add('dark-mode'); } catch(e){} updateDarkLabel(); })();
+    dm.addEventListener('click', () => { const on = document.body.classList.toggle('dark-mode'); try{ localStorage.setItem('mm-dark', on ? '1' : '0'); }catch(e){} updateDarkLabel(); });
 
-    // other buttons and key handling
-    $('search-btn').addEventListener('click', handleSearch);
-    $('clear-btn').addEventListener('click', () => { $('query').value=''; setOverview('No overview yet. Type a query and press Search.'); setLinks([]); });
-    $('download-btn').addEventListener('click', () => {
+    // UI wiring
+    $('search-btn').addEventListener('click', doSearch);
+    $('clear-btn').addEventListener('click', ()=>{ $('query').value=''; setOverview('No overview yet. Enter a query and press Search.'); setLinks([]); });
+    $('query').addEventListener('keydown', (e)=>{ if (e.key === 'Enter') { e.preventDefault(); doSearch(); } });
+
+    // download and backend check
+    $('download-btn')?.addEventListener('click', ()=>{
       const overview = $('overview').textContent || '';
-      const links = Array.from($('links').querySelectorAll('.link-item')).map(n => ({
-        title: n.querySelector('.title')?.textContent || '',
-        desc: n.querySelector('.desc')?.textContent || ''
-      }));
+      const links = Array.from($('links').querySelectorAll('.link')).map(n=>({ title: n.querySelector('.title')?.textContent||'', desc: n.querySelector('.desc')?.textContent||'' }));
       const blob = new Blob([JSON.stringify({ overview, links }, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href=url; a.download='results.json'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'results.json'; document.body.appendChild(a); a.click(); a.remove();
+    });
+    $('test-backend')?.addEventListener('click', async ()=>{
+      try { const r = await fetch('/api/health'); alert(r.ok ? 'Backend OK' : 'Backend status ' + r.status); } catch(e){ alert('Backend unreachable: ' + (e.message||e)); }
     });
 
-    // Health check
-    $('test-backend').addEventListener('click', async () => {
-      try {
-        const res = await fetch('/api/health');
-        if (res.ok) {
-          alert('Backend: OK');
-        } else {
-          alert('Backend returned ' + res.status);
-        }
-      } catch(e) {
-        alert('Backend unreachable: ' + (e.message || e));
-      }
-    });
-
-    // keyboard: Enter -> Search, Shift+Enter -> force search as well
-    $('query').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') { e.preventDefault(); handleSearch(); }
-    });
-
-    // On load: if query param q exists, run search
-    (function runFromQuery() {
-      try {
-        const p = new URLSearchParams(window.location.search);
-        const q = p.get('q');
-        if (q) {
-          $('query').value = q;
-          handleSearch();
-        }
-      } catch(e){}
-    })();
+    // note: "Unchecked runtime.lastError" in console is usually an extension message; not from this page
   </script>
 </body>
 </html>
