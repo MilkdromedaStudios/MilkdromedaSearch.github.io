@@ -139,92 +139,44 @@
     </div>
   </div>
 
-  <script>
-    // basic helpers
-    const $ = id => document.getElementById(id);
-    $('year').textContent = new Date().getFullYear();
+ <script>
+  // Replace with your actual Render backend URL
+  const API_BASE = "https://milkdromeda-backend.onrender.com";
 
-    // safe fetch: handles empty/non-JSON responses
-    async function safeJsonFetch(path, body=null) {
-      const opts = body ? {
-        method: 'POST',
-        headers: { 'Accept': 'application/json', 'Content-Type':'application/json' },
-        body: JSON.stringify(body)
-      } : { method: 'GET' };
-      const res = await fetch(path, opts);
-      if (res.status === 204) return null;
-      const text = await res.text().catch(()=>null);
-      if (!text) return null;
-      try { return JSON.parse(text); } catch(e) { return { text }; }
-    }
+  async function safeJsonFetch(path, body=null) {
+    const url = API_BASE + path;
+    const opts = body ? {
+      method: 'POST',
+      headers: { 'Accept':'application/json','Content-Type':'application/json' },
+      body: JSON.stringify(body)
+    } : { method: 'GET' };
+    const res = await fetch(url, opts);
+    const text = await res.text();
+    return text ? JSON.parse(text) : null;
+  }
 
-    function setOverview(text) { $('overview').textContent = text || 'No overview available.'; }
-    function setLinks(list) {
-      const out = $('links');
-      out.innerHTML = '';
-      if (!list || list.length === 0) { out.innerHTML = '<div class="lead">No links found.</div>'; return; }
-      list.forEach(it => {
-        const title = it.title || it.name || (typeof it === 'string' ? it : 'Result');
-        const desc = it.description || it.text || it.snippet || '';
-        const el = document.createElement('div');
-        el.className = 'link';
-        el.innerHTML = `<div class="title">${escapeHtml(title)}</div>` + (desc ? `<div class="desc">${escapeHtml(desc)}</div>` : '');
-        out.appendChild(el);
-      });
-    }
-    function escapeHtml(s){ if(!s && s !== 0) return ''; return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  async function doSearch() {
+    const q = document.getElementById("query").value.trim();
+    if (!q) return;
 
-    // unified search that fills overview then links
-    async function doSearch(){
-      const q = $('query').value.trim();
-      if (!q) { setOverview('Type a query first.'); setLinks([]); return; }
+    // Overview
+    const ov = await safeJsonFetch("/api/overview", { query: q });
+    document.getElementById("overview").textContent =
+      ov?.result || "No overview returned.";
 
-      setOverview('Generating overview...');
-      setLinks([]);
-      try {
-        const ov = await safeJsonFetch('/api/overview', { query: q });
-        const text = ov?.result || ov?.summary || ov?.text || (typeof ov === 'string' ? ov : null) || 'No overview returned.';
-        setOverview(text);
-
-        const lk = await safeJsonFetch('/api/search', { query: q });
-        let items = [];
-        if (!lk) items = [];
-        else if (Array.isArray(lk)) items = lk;
-        else if (Array.isArray(lk.results)) items = lk.results;
-        else if (lk.items) items = lk.items;
-        else if (lk.text) items = [{ title: 'Result', description: lk.text }];
-        items = items.map(i => typeof i === 'string' ? { title: i, description: '' } : i);
-        setLinks(items);
-      } catch(err){
-        setOverview('Error: ' + (err?.message || 'Unknown'));
-        setLinks([]);
-        console.error(err);
-      }
-    }
-
-    // dark mode toggle (no gradients)
-    const dm = $('dark-mode-toggle');
-    function updateDarkLabel(){ const on = document.body.classList.contains('dark-mode'); dm.setAttribute('aria-pressed', on? 'true':'false'); dm.textContent = on? 'Light Mode' : 'Dark Mode'; }
-    (function restore(){ try { if (localStorage.getItem('mm-dark') === '1') document.body.classList.add('dark-mode'); } catch(e){} updateDarkLabel(); })();
-    dm.addEventListener('click', () => { const on = document.body.classList.toggle('dark-mode'); try{ localStorage.setItem('mm-dark', on ? '1' : '0'); }catch(e){} updateDarkLabel(); });
-
-    // UI wiring
-    $('search-btn').addEventListener('click', doSearch);
-    $('clear-btn').addEventListener('click', ()=>{ $('query').value=''; setOverview('No overview yet. Enter a query and press Search.'); setLinks([]); });
-    $('query').addEventListener('keydown', (e)=>{ if (e.key === 'Enter') { e.preventDefault(); doSearch(); } });
-
-    // download and backend check
-    $('download-btn')?.addEventListener('click', ()=>{
-      const overview = $('overview').textContent || '';
-      const links = Array.from($('links').querySelectorAll('.link')).map(n=>({ title: n.querySelector('.title')?.textContent||'', desc: n.querySelector('.desc')?.textContent||'' }));
-      const blob = new Blob([JSON.stringify({ overview, links }, null, 2)], { type: 'application/json' });
-      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'results.json'; document.body.appendChild(a); a.click(); a.remove();
+    // Links
+    const lk = await safeJsonFetch("/api/search", { query: q });
+    const links = Array.isArray(lk?.results) ? lk.results : [];
+    const out = document.getElementById("links");
+    out.innerHTML = "";
+    links.forEach(item => {
+      const div = document.createElement("div");
+      div.innerHTML = `<strong>${item.title}</strong><br>${item.description}`;
+      out.appendChild(div);
     });
-    $('test-backend')?.addEventListener('click', async ()=>{
-      try { const r = await fetch('/api/health'); alert(r.ok ? 'Backend OK' : 'Backend status ' + r.status); } catch(e){ alert('Backend unreachable: ' + (e.message||e)); }
-    });
+  }
 
-    // note: "Unchecked runtime.lastError" in console is usually an extension message; not from this page
-  </script>
+  document.getElementById("search-btn").addEventListener("click", doSearch);
+</script>
 </body>
 </html>
