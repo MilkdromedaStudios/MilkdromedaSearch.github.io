@@ -3,257 +3,302 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Milkdromeda Search — Test Page</title>
+  <title>Milkdromeda Search — Live</title>
 
   <style>
     :root{
-      --bg:#d9f0ff;
-      --border:#2b7fff;
-      --card-bg:#d9f0ff;
-      --text:#0f172a;
-      --accent:#1e3a8a;
-      --muted:#6b7280;
-      --success:#0ea5a4;
+      --page-bg: #e6f8ff;      /* lighter blue page background */
+      --card-bg: #eef9ff;      /* card background (soft) */
+      --accent: #2b7fff;       /* bright blue accent */
+      --muted: #6b7280;
+      --text: #062034;
+      --card-shadow: rgba(43,127,255,0.08);
+      --link-bg: #ffffff;
     }
 
-    /* page */
-    html,body{height:100%;margin:0;font-family:Segoe UI,Arial,sans-serif;background:linear-gradient(180deg,#eaf6ff 0%, #d9f0ff 100%);color:var(--text);}
-    .wrap{max-width:980px;margin:28px auto;padding:20px;box-sizing:border-box}
+    /* Page */
+    html,body{height:100%;margin:0;font-family:"Segoe UI",system-ui,Arial,sans-serif;background:var(--page-bg);color:var(--text)}
+    .wrap{max-width:980px;margin:36px auto;padding:20px;box-sizing:border-box}
 
-    /* card / bubble */
+    /* clean card style (not email-like) */
     .card{
-      background:var(--card-bg);
-      border:2px solid var(--border);
-      border-radius:12px;
+      background: linear-gradient(180deg,var(--card-bg),#e6f8ff);
+      border-radius:14px;
       padding:18px;
-      box-shadow:0 6px 18px rgba(43,127,255,0.08);
+      box-shadow:0 10px 30px var(--card-shadow);
+      border:1px solid rgba(43,127,255,0.12);
     }
+    .header{display:flex;align-items:center;gap:14px;margin-bottom:10px}
+    .brand-title{font-size:20px;margin:0;color:var(--accent);letter-spacing:0.2px}
+    .brand-sub{margin:0;font-size:13px;color:var(--muted)}
 
-    /* header */
-    .brand{display:flex;align-items:center;gap:12px;margin-bottom:12px}
-    .brand h1{font-size:18px;margin:0;color:var(--accent)}
-    .brand p{margin:0;font-size:13px;color:var(--muted)}
-
-    /* message area */
-    .message{margin:12px 0 18px;font-size:14px;line-height:1.5;color:var(--text)}
-    .message p{margin:0 0 10px}
-
-    /* controls */
-    .controls{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px}
-    .controls input[type="text"]{padding:8px 10px;border:1px solid #cbd5e1;border-radius:8px;min-width:220px}
-    .btn{
-      display:inline-block;padding:8px 12px;border-radius:8px;border:0;background:var(--border);color:#fff;cursor:pointer;font-weight:600;
-      box-shadow:0 4px 8px rgba(43,127,255,0.12);
+    /* input + controls */
+    .controls{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}
+    .controls input[type="text"]{
+      flex:1;min-width:220px;padding:10px 12px;border-radius:10px;border:1px solid rgba(6,32,52,0.06);font-size:14px;background:var(--link-bg)
     }
-    .btn.secondary{background:#ffffff;color:var(--border);border:1px solid #cfe6ff}
-    .btn:active{transform:translateY(1px)}
+    .btn{padding:9px 13px;border-radius:10px;border:0;cursor:pointer;font-weight:700}
+    .btn.primary{background:var(--accent);color:#fff}
+    .btn.ghost{background:transparent;color:var(--accent);border:1px solid rgba(43,127,255,0.12)}
+    .btn.weak{background:#fff;color:var(--muted);border:1px solid rgba(6,32,52,0.04)}
 
-    /* results */
-    #results{margin-top:12px}
-    .result-item{padding:10px;border-radius:8px;background:rgba(255,255,255,0.6);margin-bottom:8px;border:1px solid rgba(11,18,32,0.04)}
-    .result-title{font-weight:700;color:var(--accent);font-size:14px}
-    .result-body{font-size:13px;color:var(--text);margin-top:6px}
+    /* layout for results */
+    .sections{display:grid;grid-template-columns:1fr 320px;gap:18px}
+    @media (max-width:880px){ .sections{grid-template-columns:1fr} }
 
-    /* footer */
-    .footer{margin-top:14px;border-top:1px solid #b6d8ff;padding-top:10px;font-size:12px;color:var(--muted)}
-    .social{display:flex;gap:12px;align-items:center;margin-top:8px}
-    .social img{display:block;height:28px}
+    .panel{background:rgba(255,255,255,0.7);border-radius:10px;padding:12px;border:1px solid rgba(6,32,52,0.03)}
+    .panel h3{margin:0 0 8px 0;font-size:15px;color:var(--accent)}
+    .panel p.lead{margin:0 0 10px;font-size:14px;color:var(--text)}
+
+    .overview-box{min-height:80px;padding:10px;border-radius:8px;background:linear-gradient(180deg,#ffffff,#f6fdff);font-size:14px;color:var(--text)}
+    .links-list{display:flex;flex-direction:column;gap:10px}
+    .link-item{padding:10px;border-radius:8px;background:#ffffff;border:1px solid rgba(6,32,52,0.04)}
+    .link-item .title{font-weight:700;color:#0d4aa0;font-size:14px}
+    .link-item .desc{font-size:13px;color:var(--muted);margin-top:6px}
+
+    .footer{margin-top:16px;font-size:12px;color:var(--muted);display:flex;justify-content:space-between;align-items:center}
 
     /* dark mode */
     body.dark-mode{
-      background:linear-gradient(180deg,#0b1220 0%, #071226 100%);
-      color:#dbeafe;
+      --page-bg: linear-gradient(180deg,#071226,#041226);
+      --card-bg: #071226;
+      --accent: #7fbcff;
+      --muted: #88b6d9;
+      --text: #e6f8ff;
+      --card-shadow: rgba(0,0,0,0.45);
+      --link-bg: #071226;
     }
-    body.dark-mode .card{background:#0b1220;border-color:#234a86;box-shadow:none}
-    body.dark-mode .controls input[type="text"]{background:#071226;color:#dbeafe;border:1px solid #153049}
-    body.dark-mode .btn.secondary{background:#071226;color:#80cfff;border:1px solid #153049}
-    body.dark-mode .result-item{background:rgba(8,12,16,0.6);border:1px solid rgba(255,255,255,0.03)}
-    body.dark-mode .footer{border-top-color:#0f2a4a;color:#8fbce6}
+    body.dark-mode .card{box-shadow:0 6px 20px rgba(0,0,0,0.5)}
+    body.dark-mode .panel{background:rgba(8,12,18,0.4);border:1px solid rgba(127,192,255,0.06)}
+    body.dark-mode .overview-box{background:linear-gradient(180deg,#081424,#041324)}
+    body.dark-mode .link-item{background:rgba(8,12,18,0.45);border:1px solid rgba(255,255,255,0.03)}
+    body.dark-mode .controls input[type="text"]{background:rgba(255,255,255,0.03);border:1px solid rgba(127,192,255,0.06);color:var(--text)}
+    body.dark-mode .btn.ghost{color:var(--accent)}
+    body.dark-mode .brand-sub{color:var(--muted)}
+    body.dark-mode .footer{color:var(--muted)}
 
-    /* accessibility */
-    @media (max-width:600px){
-      .controls{flex-direction:column}
-      .controls input[type="text"]{min-width:100%}
-    }
+    /* subtle utilities */
+    .muted{color:var(--muted);font-size:13px}
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="card" id="bubble">
-      <div class="brand">
-        <!-- Optional logo: swap the src for your CDN logo -->
-        <!-- <img src="/assets/logo.png" alt="Milkdromeda logo" width="36" height="36" style="border-radius:6px"> -->
+    <div class="card" id="card">
+      <div class="header">
         <div>
-          <h1>Milkdromeda Studios</h1>
-          <p>Crafting original Minecraft & Roblox worlds with pixel‑perfect design and creative automation.</p>
+          <h1 class="brand-title">Milkdromeda Studios</h1>
+          <p class="brand-sub">Search & AI tools for Minecraft, Roblox, and studio notes</p>
         </div>
       </div>
 
-      <div class="message" id="message">
-        <p>Hello — type a query below to get an AI overview or a search of resources. The result will appear inside this card so you don't have to paste the signature every time.</p>
+      <div class="controls" role="search" aria-label="Site search">
+        <input id="query" type="text" placeholder="Search: Blade Ball, Void Sword, AFK farms..." aria-label="query input" />
+        <button id="search-btn" class="btn primary" type="button">Search</button>
+        <button id="dark-mode-toggle" class="btn ghost" type="button" aria-pressed="false">Dark Mode</button>
+        <button id="clear-btn" class="btn weak" type="button">Clear</button>
       </div>
 
-      <div class="controls" aria-label="search controls">
-        <input id="query" type="text" placeholder="Ask about Blade Ball, Void Sword, or your project..." />
-        <button id="overview-btn" class="btn" type="button">AI Overview</button>
-        <button id="search-btn" class="btn secondary" type="button">Search</button>
-        <button id="dark-mode-toggle" class="btn" type="button" aria-pressed="false">Toggle Dark Mode</button>
-        <button id="clear-btn" class="btn secondary" type="button">Clear</button>
-      </div>
+      <div class="sections">
+        <div>
+          <div class="panel">
+            <h3>AI Overview</h3>
+            <p class="lead muted">A concise AI-generated summary for the query appears here first.</p>
+            <div id="overview" class="overview-box" aria-live="polite">No overview yet. Type a query and press Search.</div>
+          </div>
 
-      <div id="results" aria-live="polite"></div>
+          <div style="height:12px"></div>
+
+          <div class="panel">
+            <h3>Links with Descriptions</h3>
+            <p class="lead muted">AI-curated links and short descriptions related to the query.</p>
+            <div id="links" class="links-list"></div>
+          </div>
+        </div>
+
+        <aside>
+          <div class="panel">
+            <h3>Quick actions</h3>
+            <p class="muted">Use Enter to search. Shift+Enter forces a search variations call.</p>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+              <button id="download-btn" class="btn ghost" type="button">Download Results (JSON)</button>
+              <button id="test-backend" class="btn weak" type="button">Check Backend</button>
+            </div>
+          </div>
+
+          <div style="height:12px"></div>
+
+          <div class="panel">
+            <h3>About</h3>
+            <p class="muted">© <span id="year"></span> Milkdromeda Studios. All rights reserved.</p>
+          </div>
+        </aside>
+      </div>
 
       <div class="footer">
-        <div class="social">
-          <a href="https://www.youtube.com/@MilkdrinedaStudios" target="_blank" rel="noopener">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/YouTube_Logo_2017.svg" alt="YouTube">
-          </a>
-          <a href="https://milkdromedagamez.itch.io/" target="_blank" rel="noopener">
-            <img src="https://itch.io/static/images/itchio-textless-black.svg" alt="itch.io" style="height:30px;background:#fa5c5c;border-radius:6px;padding:6px;">
-          </a>
-        </div>
-        <div style="margin-top:8px">© <span id="year"></span> Milkdromeda Studios. All rights reserved.</div>
+        <div class="muted">Milkdromeda Search UI</div>
+        <div class="muted">Built with a secure backend</div>
       </div>
     </div>
   </div>
 
   <script>
-    // --- Helpers
+    // Minimal DOM helpers
     const $ = id => document.getElementById(id);
-    const setYear = () => { $('year').textContent = new Date().getFullYear(); };
-    setYear();
+    $('year').textContent = new Date().getFullYear();
 
-    // --- UI functions
-    function setLoading(state, text = 'Working...') {
-      const container = $('results');
-      if (state) {
-        container.innerHTML = '<div class="result-item"><div class="result-title">Loading</div><div class="result-body">' + text + '</div></div>';
+    // Robust fetch wrapper: handle empty/non-JSON responses gracefully
+    async function safeJsonFetch(path, body = null, opts = {}) {
+      const fetchOpts = {
+        method: body ? 'POST' : 'GET',
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        ...(body ? { body: JSON.stringify(body) } : {}),
+        ...opts
+      };
+      const res = await fetch(path, fetchOpts);
+      // if no content (204) or length 0, return null
+      if (res.status === 204) return null;
+      // if response has no body length, try text then parse if non-empty
+      const text = await res.text().catch(()=>null);
+      if (!text) {
+        // empty body — treat as no data, but not JSON parse error
+        return null;
+      }
+      try {
+        return JSON.parse(text);
+      } catch(e) {
+        // server returned non-JSON text — return as { text }
+        return { text };
       }
     }
-    function showError(err) {
-      const container = $('results');
-      container.innerHTML = '<div class="result-item" style="border-left:3px solid #f87171"><div class="result-title">Error</div><div class="result-body">'+ (err?.message || String(err)) +'</div></div>';
-      console.error(err);
-    }
-    function showResults(items, title = 'Results') {
-      const container = $('results');
+
+    // UI helpers
+    function setOverview(text) { $('overview').textContent = text || 'No overview available.'; }
+    function setLinks(items) {
+      const el = $('links');
+      el.innerHTML = '';
       if (!items || items.length === 0) {
-        container.innerHTML = '<div class="result-item"><div class="result-title">No results</div><div class="result-body">Try a different query.</div></div>';
+        el.innerHTML = '<div class="muted">No links found for this query.</div>';
         return;
       }
-      container.innerHTML = items.map(i => 
-        `<div class="result-item"><div class="result-title">${escapeHtml(i.title || i)}</div>` +
-        `<div class="result-body">${escapeHtml(i.text || i.description || i)}</div></div>`
-      ).join('');
+      items.forEach(item => {
+        const title = item.title || item.name || item.link || 'Untitled';
+        const desc = item.description || item.text || item.snippet || '';
+        const node = document.createElement('div');
+        node.className = 'link-item';
+        node.innerHTML = '<div class="title">' + escapeHtml(title) + '</div>' +
+                         (desc ? '<div class="desc">' + escapeHtml(desc) + '</div>' : '');
+        el.appendChild(node);
+      });
     }
-    function escapeHtml(s){ if(typeof s !== 'string') return s; return s.replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    function escapeHtml(s){ if(!s && s !== 0) return ''; return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
-    // --- API calls to backend (secure: backend must use API_KEY)
-    async function callApi(path, body){
-      try {
-        const res = await fetch(path, {
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify(body),
-        });
-        if (!res.ok) {
-          const text = await res.text().catch(()=>null);
-          throw new Error('Server error: ' + res.status + (text ? ' - ' + text : ''));
-        }
-        return await res.json();
-      } catch(err) { throw err; }
-    }
-
-    async function handleOverview() {
-      const q = $('query').value.trim();
-      if(!q) { showError(new Error('Type a query first.')); return; }
-      setLoading(true, 'Generating overview...');
-      try {
-        const data = await callApi('/api/overview', { query: q });
-        // Expect { result: "..." } or similar
-        const resultText = data?.result || data?.summary || JSON.stringify(data);
-        showResults([{ title: 'Overview', text: resultText }]);
-      } catch(err) { showError(err); }
-    }
-
+    // single handler: Search -> fills Overview and Links sections
     async function handleSearch() {
       const q = $('query').value.trim();
-      if(!q) { showError(new Error('Type a query first.')); return; }
-      setLoading(true, 'Searching for resources...');
+      if (!q) { setOverview('Type a query first.'); setLinks([]); return; }
+
+      setOverview('Generating overview...');
+      setLinks([]);
       try {
-        const data = await callApi('/api/search', { query: q });
-        // Expect { results: [ "item1", {title, description}, ... ] }
-        const results = (Array.isArray(data?.results) ? data.results : (Array.isArray(data) ? data : []));
-        // Normalize into objects with title/text
-        const normalized = results.map(r => {
-          if (typeof r === 'string') return { title: r, text: '' };
-          return { title: r.title || r.name || (r.link || 'Result'), text: r.text || r.description || r.snippet || (r.link || '') };
-        });
-        showResults(normalized, 'Search Results');
-      } catch(err) { showError(err); }
+        // overview call
+        const ov = await safeJsonFetch('/api/overview', { query: q });
+        // normalize overview text
+        const overviewText = ov?.result || ov?.summary || ov?.text || (typeof ov === 'string' ? ov : null) || 'No overview returned.';
+        setOverview(overviewText);
+
+        // links call
+        const lk = await safeJsonFetch('/api/search', { query: q });
+        // normalize to array of items
+        let items = [];
+        if (!lk) {
+          items = [];
+        } else if (Array.isArray(lk)) {
+          items = lk;
+        } else if (Array.isArray(lk.results)) {
+          items = lk.results;
+        } else if (lk.items) {
+          items = lk.items;
+        } else if (lk.text && typeof lk.text === 'string') {
+          // fallback: put the returned text as a single item
+          items = [{ title: 'Result', description: lk.text }];
+        } else {
+          items = [];
+        }
+        // map strings to objects
+        items = items.map(it => typeof it === 'string' ? { title: it, description: '' } : it);
+        setLinks(items);
+      } catch (err) {
+        // handle network/parsing errors
+        setOverview('Error: ' + (err?.message || 'Unknown error'));
+        setLinks([]);
+        console.error('Search error', err);
+      }
     }
 
-    // --- Dark mode toggle (works reliably)
+    // Dark mode toggle (reliable + persists)
     const darkToggle = $('dark-mode-toggle');
-    function updateDarkAria(){
-      const pressed = document.body.classList.contains('dark-mode');
-      darkToggle.setAttribute('aria-pressed', pressed ? 'true' : 'false');
-      darkToggle.textContent = pressed ? 'Light Mode' : 'Dark Mode';
+    function updateDarkLabel() {
+      const on = document.body.classList.contains('dark-mode');
+      darkToggle.setAttribute('aria-pressed', on ? 'true' : 'false');
+      darkToggle.textContent = on ? 'Light Mode' : 'Dark Mode';
     }
-    // restore preference
-    (function restorePref(){
+    (function restore() {
       try {
-        const pref = localStorage.getItem('mm-dark');
-        if (pref === '1') document.body.classList.add('dark-mode');
+        if (localStorage.getItem('mm-dark') === '1') document.body.classList.add('dark-mode');
       } catch(e){}
-      updateDarkAria();
+      updateDarkLabel();
     })();
-
     darkToggle.addEventListener('click', () => {
-      document.body.classList.toggle('dark-mode');
-      try {
-        const on = document.body.classList.contains('dark-mode');
-        localStorage.setItem('mm-dark', on ? '1' : '0');
-      } catch(e){}
-      updateDarkAria();
+      const on = document.body.classList.toggle('dark-mode');
+      try { localStorage.setItem('mm-dark', on ? '1' : '0'); } catch(e){}
+      updateDarkLabel();
     });
 
-    // --- other UI wiring
-    $('overview-btn').addEventListener('click', handleOverview);
+    // other buttons and key handling
     $('search-btn').addEventListener('click', handleSearch);
-    $('clear-btn').addEventListener('click', () => {
-      $('query').value = '';
-      $('results').innerHTML = '';
+    $('clear-btn').addEventListener('click', () => { $('query').value=''; setOverview('No overview yet. Type a query and press Search.'); setLinks([]); });
+    $('download-btn').addEventListener('click', () => {
+      const overview = $('overview').textContent || '';
+      const links = Array.from($('links').querySelectorAll('.link-item')).map(n => ({
+        title: n.querySelector('.title')?.textContent || '',
+        desc: n.querySelector('.desc')?.textContent || ''
+      }));
+      const blob = new Blob([JSON.stringify({ overview, links }, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href=url; a.download='results.json'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
     });
 
-    // Keyboard: Enter triggers overview
-    $('query').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        handleOverview();
-      }
-      // Shift+Enter for search
-      if (e.key === 'Enter' && e.shiftKey) {
-        e.preventDefault();
-        handleSearch();
-      }
-    });
-
-    // --- quick dev helper: show backend status when page loads
-    (async function checkBackend(){
+    // Health check
+    $('test-backend').addEventListener('click', async () => {
       try {
-        const res = await fetch('/api/health', { method: 'GET' }).catch(()=>null);
-        if (!res) return;
-        if (res.ok){
-          const el = document.createElement('div');
-          el.className = 'result-item';
-          el.innerHTML = '<div class="result-title">Backend</div><div class="result-body">Connected</div>';
-          const container = $('results');
-          container.insertAdjacentElement('afterbegin', el);
+        const res = await fetch('/api/health');
+        if (res.ok) {
+          alert('Backend: OK');
+        } else {
+          alert('Backend returned ' + res.status);
+        }
+      } catch(e) {
+        alert('Backend unreachable: ' + (e.message || e));
+      }
+    });
+
+    // keyboard: Enter -> Search, Shift+Enter -> force search as well
+    $('query').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); handleSearch(); }
+    });
+
+    // On load: if query param q exists, run search
+    (function runFromQuery() {
+      try {
+        const p = new URLSearchParams(window.location.search);
+        const q = p.get('q');
+        if (q) {
+          $('query').value = q;
+          handleSearch();
         }
       } catch(e){}
     })();
-
   </script>
 </body>
 </html>
