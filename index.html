@@ -1,182 +1,401 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Milkdromeda Search</title>
+  <meta charset="UTF-8">
+  <title>AI Search Demo – Google/Bing Style</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    :root{
-      --page-bg: #f3f6fb;     /* soft neutral light background */
-      --card-bg: #ffffff;     /* white card */
-      --accent: #0078d4;      /* Bing-like blue */
-      --muted: #6b7280;
-      --text: #0b2336;
-      --surface: #f7fafc;
-      --border: rgba(11,35,54,0.06);
+    :root {
+      --bg: #fff;
+      --primary: #1a73e8;
+      --accent: #e8eaed;
+      --text: #202124;
+      --border: #dadce0;
+      --error: #d93025;
+      --spinner: #1a73e8;
+      --shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, Arial, sans-serif;
+      margin: 0; padding: 0;
+    }
+    header {
+      padding: 2rem 0 1.5rem 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 2.4rem;
+      font-weight: 500;
+      letter-spacing: -.03em;
+      color: var(--primary);
+      user-select: none;
+    }
+    main {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
 
-    /* page */
-    html,body{height:100%;margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--page-bg);color:var(--text)}
-    .wrap{max-width:1040px;margin:40px auto;padding:20px;box-sizing:border-box}
-
-    /* card */
-    .card{
-      background:var(--card-bg);
-      border-radius:12px;
-      padding:20px;
-      box-shadow:0 6px 18px rgba(11,35,54,0.04);
-      border:1px solid var(--border);
+    /* Search Bar */
+    form[role="search"] {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      box-shadow: var(--shadow);
+      border-radius: 24px;
+      background: var(--accent);
+      padding: 0.5rem 1.25rem;
+      min-width: 320px;
+      max-width: 560px;
+      width: 95vw;
+      margin: 0 auto 2rem auto;
+      gap: 0.7rem;
+    }
+    label[for="search-input"] {
+      position: absolute;
+      opacity: 0;
+      width: 1px; height: 1px;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    input[type="search"] {
+      border: none;
+      outline: none;
+      padding: 0.7rem 0.5rem;
+      font-size: 1.1rem;
+      flex: 1 1 auto;
+      background: transparent;
+      color: var(--text);
+    }
+    input[type="search"]:focus {
+      outline: none;
+      background: #eef3fb;
+    }
+    button[type="submit"] {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 18px;
+      width: 44px;
+      height: 44px;
+      font-size: 1.3rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.12s;
+      outline: none;
+    }
+    button[type="submit"]:hover,
+    button[type="submit"]:focus {
+      background: #1565c0;
+    }
+    button[disabled] {
+      opacity: 0.7;
+      cursor: not-allowed;
     }
 
-    /* header */
-    .header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
-    .brand{display:flex;align-items:center;gap:12px}
-    .brand h1{margin:0;font-size:20px;color:var(--accent);letter-spacing:0.2px}
-    .brand p{margin:0;font-size:13px;color:var(--muted)}
-
-    /* controls */
-    .controls{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px}
-    .controls input[type="text"]{
-      flex:1;min-width:260px;padding:12px 14px;border-radius:8px;border:1px solid var(--border);font-size:15px;background:var(--surface)
+    /* Main Sections */
+    #ai-overview, #search-results {
+      min-width: 320px;
+      max-width: 600px;
+      width: 95vw;
+      background: #fff;
+      margin: 0.5rem auto 1.25rem auto;
+      border-radius: 0.7rem;
+      box-shadow: var(--shadow);
+      padding: 1.1rem 1.1rem 1.1rem 1.4rem;
+      position: relative;
     }
-    .btn{padding:10px 14px;border-radius:8px;border:0;cursor:pointer;font-weight:700}
-    .btn.primary{background:var(--accent);color:#fff}
-    .btn.ghost{background:transparent;color:var(--accent);border:1px solid rgba(0,120,212,0.12)}
-
-    /* layout */
-    .grid{display:grid;grid-template-columns:1fr 320px;gap:18px}
-    @media (max-width:880px){ .grid{grid-template-columns:1fr} }
-
-    .panel{background:var(--card-bg);border-radius:10px;padding:14px;border:1px solid var(--border)}
-    .panel h3{margin:0 0 8px 0;font-size:15px;color:var(--accent)}
-    .lead{margin:0 0 10px 0;color:var(--muted);font-size:13px}
-
-    .overview{min-height:96px;padding:12px;border-radius:8px;background:var(--surface);font-size:14px;color:var(--text)}
-    .links{display:flex;flex-direction:column;gap:10px}
-    .link{padding:10px;border-radius:8px;background:#ffffff;border:1px solid var(--border)}
-    .link .title{font-weight:700;color:#0b3b66;font-size:14px}
-    .link .desc{margin-top:6px;color:var(--muted);font-size:13px}
-
-    .footer{margin-top:16px;font-size:12px;color:var(--muted);display:flex;justify-content:space-between}
-
-    /* dark mode: solid colors only, no gradients */
-    body.dark-mode{
-      --page-bg: #0b1016;
-      --card-bg: #07101a;
-      --accent: #4aa3ff;
-      --muted: #9bbfe6;
-      --text: #e6f6ff;
-      --surface: #05121a;
-      --border: rgba(74,163,255,0.08);
+    #ai-overview {
+      margin-top: 0;
     }
-    body.dark-mode .card{box-shadow:none;border:1px solid rgba(255,255,255,0.03)}
-    body.dark-mode .controls input[type="text"]{background:var(--surface);border:1px solid rgba(255,255,255,0.04);color:var(--text)}
-    body.dark-mode .link{background:var(--surface);border:1px solid rgba(255,255,255,0.03)}
+    #ai-overview[aria-busy="true"],
+    #search-results[aria-busy="true"] {
+      opacity: 0.6;
+      filter: blur(1px);
+    }
+    #ai-overview[hidden],
+    #search-results[hidden] {
+      display: none;
+    }
+    #search-results ul {
+      padding: 0;
+      margin: 0;
+      list-style: none;
+    }
+    #search-results li {
+      padding: 0.5rem 0 0.5rem 0;
+      border-bottom: 1px solid var(--accent);
+    }
+    #search-results li:last-child {
+      border-bottom: none;
+    }
+
+    /* Loading Spinner */
+    .spinner {
+      display: inline-block;
+      width: 28px;
+      height: 28px;
+      vertical-align: middle;
+      position: relative;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    .spinner:after {
+      content: " ";
+      display: block;
+      width: 22px;
+      height: 22px;
+      margin: 3px;
+      border-radius: 50%;
+      border: 3.5px solid var(--spinner);
+      border-color: var(--spinner) transparent var(--spinner) transparent;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg);}
+      100% { transform: rotate(360deg);}
+    }
+
+    /* Error Messages */
+    .error-message {
+      display: inline-block;
+      color: var(--error);
+      background: #fbe9e7;
+      border: 1px solid #ef9a9a;
+      border-radius: 4px;
+      padding: 0.6em 1.1em;
+      margin: 0.5em 0;
+      font-size: 1em;
+      font-weight: 500;
+    }
+
+    /* Status/live ARIA region for readers */
+    [role="status"] {
+      display: block;
+      min-height: 1rem;
+      margin-bottom: 0.2em;
+      font-size: 1em;
+    }
+
+    /* Responsive: Stack and shrink margins on mobile */
+    @media (max-width: 600px) {
+      form[role="search"], #ai-overview, #search-results {
+        max-width: 99vw;
+        min-width: unset;
+        padding: 0.8rem 0.3rem 0.8rem 0.6rem;
+      }
+      header { font-size: 1.55rem; }
+    }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="card" role="main">
-      <div class="header">
-        <div class="brand">
-          <div>
-            <h1>Milkdromeda Search</h1>
-            <p>Fast search and AI summaries for your studio notes and game topics</p>
-          </div>
-        </div>
+  <header>AI Search</header>
+  <main>
+    <form role="search" aria-label="Site search" id="search-form" autocomplete="off">
+      <label for="search-input">Search this site:</label>
+      <input id="search-input" type="search" name="q" maxlength="128" required autocomplete="off"
+        placeholder="Search the web or ask a question"
+        aria-label="Search here"
+        />
+      <button type="submit" aria-label="Submit search">
+        <span aria-hidden="true">&#128269;</span>
+      </button>
+    </form>
+    <div id="status-region" role="status" aria-live="polite" aria-atomic="true"></div>
+    <section id="ai-overview" tabindex="-1" aria-busy="false" hidden>
+      <!-- AI overview inserted here -->
+    </section>
+    <section id="search-results" tabindex="-1" aria-busy="false" hidden>
+      <!-- Results list inserted here -->
+    </section>
+  </main>
+  <footer>
+    <small style="display:block;text-align:center;color:#888;padding:1.5em 0 0.7em 0;">
+      Powered by AI Overview Demo | 2025 | Accessible, Responsive, Open UI
+    </small>
+  </footer>
+  <script>
+    // CONFIG: Set this to your Render backend base URL if needed (no trailing slash).
+    const API_BASE = ""; // e.g. "" for same domain, or "https://your-backend.onrender.com"
+    const healthEndpoint = API_BASE + "/api/health";
+    const overviewEndpoint = API_BASE + "/api/overview";
 
-        <div style="display:flex;gap:8px;align-items:center">
-          <button id="dark-mode-toggle" class="btn ghost" aria-pressed="false" type="button">Dark Mode</button>
-        </div>
-      </div>
+    // Get key elements
+    const form = document.getElementById('search-form');
+    const input = document.getElementById('search-input');
+    const overview = document.getElementById('ai-overview');
+    const results = document.getElementById('search-results');
+    const statusRegion = document.getElementById('status-region');
 
-      <div class="controls" role="search" aria-label="site search">
-        <input id="query" type="text" placeholder="Search (e.g. Blade Ball Void Sword AFK farm)" aria-label="query input" />
-        <button id="search-btn" class="btn primary" type="button">Search</button>
-        <button id="clear-btn" class="btn ghost" type="button">Clear</button>
-      </div>
+    let lastRequestId = 0;
 
-      <div class="grid">
-        <div>
-          <div class="panel" aria-live="polite">
-            <h3>AI Overview</h3>
-            <p class="lead">Short AI-generated summary appears here first.</p>
-            <div id="overview" class="overview">No overview yet. Enter a query and press Search.</div>
-          </div>
-
-          <div style="height:14px"></div>
-
-          <div class="panel">
-            <h3>Links with descriptions</h3>
-            <p class="lead">AI-curated links and short descriptions.</p>
-            <div id="links" class="links"></div>
-          </div>
-        </div>
-
-        <aside>
-          <div class="panel">
-            <h3>Quick actions</h3>
-            <p class="lead">Download results or check backend status.</p>
-            <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
-              <button id="download-btn" class="btn ghost" type="button">Download JSON</button>
-              <button id="test-backend" class="btn ghost" type="button">Check Backend</button>
-            </div>
-          </div>
-
-          <div style="height:14px"></div>
-
-          <div class="panel">
-            <h3>About</h3>
-            <p class="lead">© <span id="year"></span> Milkdromeda Studios</p>
-          </div>
-        </aside>
-      </div>
-
-      <div class="footer">
-        <div>Milkdromeda Search UI</div>
-        <div>Secure backend required</div>
-      </div>
-    </div>
-  </div>
-
- <script>
-  // Replace with your actual Render backend URL
-  const API_BASE = "https://milkdromeda-backend.onrender.com";
-
-  async function safeJsonFetch(path, body=null) {
-    const url = API_BASE + path;
-    const opts = body ? {
-      method: 'POST',
-      headers: { 'Accept':'application/json','Content-Type':'application/json' },
-      body: JSON.stringify(body)
-    } : { method: 'GET' };
-    const res = await fetch(url, opts);
-    const text = await res.text();
-    return text ? JSON.parse(text) : null;
-  }
-
-  async function doSearch() {
-    const q = document.getElementById("query").value.trim();
-    if (!q) return;
-
-    // Overview
-    const ov = await safeJsonFetch("/api/overview", { query: q });
-    document.getElementById("overview").textContent =
-      ov?.result || "No overview returned.";
-
-    // Links
-    const lk = await safeJsonFetch("/api/search", { query: q });
-    const links = Array.isArray(lk?.results) ? lk.results : [];
-    const out = document.getElementById("links");
-    out.innerHTML = "";
-    links.forEach(item => {
-      const div = document.createElement("div");
-      div.innerHTML = `<strong>${item.title}</strong><br>${item.description}`;
-      out.appendChild(div);
+    // Set focus on input on load
+    window.addEventListener('DOMContentLoaded', () => {
+      input.focus();
+      checkBackendHealth();
     });
-  }
 
-  document.getElementById("search-btn").addEventListener("click", doSearch);
-</script>
+    // Event listener for search submit
+    form.addEventListener('submit', async function(event) {
+      event.preventDefault();
+      const query = input.value.trim();
+      if (!query) return;
+      // For accessibility, shift focus
+      overview.setAttribute('tabindex', '-1');
+      results.setAttribute('tabindex', '-1');
+      startSearch(query);
+    });
+
+    // Main search trigger
+    async function startSearch(query) {
+      // Clear old data
+      overview.hidden = true;
+      results.hidden = true;
+      clearSection(overview);
+      clearSection(results);
+      showStatus('');
+      setSectionBusy(overview, true);
+      setSectionBusy(results, true);
+      showSectionSpinner(overview);
+      showSectionSpinner(results);
+      disableForm(true);
+
+      const reqId = ++lastRequestId;
+
+      try {
+        const data = await fetchOverview(query, reqId);
+        if (reqId !== lastRequestId) return; // Only update if still latest request
+
+        clearSection(overview);
+        clearSection(results);
+
+        if (data.overview && typeof data.overview === "string") {
+          overview.innerHTML = `<strong>AI Overview</strong><p>${escapeHtml(data.overview)}</p>`;
+          overview.hidden = false;
+        } else {
+          overview.innerHTML = "<em>No summary available.</em>";
+          overview.hidden = false;
+        }
+
+        if (Array.isArray(data.results) && data.results.length) {
+          const html = "<ul>" + data.results.map(r =>
+            `<li>
+              ${r.link
+                ? `<a href="${escapeAttr(r.link)}" target="_blank" rel="noopener">${escapeHtml(r.title || r.link)}</a><br><small>${escapeHtml(r.snippet || '')}</small>`
+                : `<strong>${escapeHtml(r.title)}</strong><br><small>${escapeHtml(r.snippet || '')}</small>`
+              }
+            </li>`
+          ).join('') + "</ul>";
+          results.innerHTML = "<strong>Search Results</strong>" + html;
+          results.hidden = false;
+        } else {
+          results.innerHTML = "<em>No results found.</em>";
+          results.hidden = false;
+        }
+        showStatus('Results loaded.');
+        overview.focus();
+      } catch (err) {
+        clearSection(overview);
+        clearSection(results);
+        overview.innerHTML = '';
+        results.innerHTML = '';
+        overview.hidden = true;
+        results.hidden = true;
+        showStatus('<div class="error-message" role="alert">⚠️ ' + escapeHtml(err.message) + '</div>');
+      } finally {
+        setSectionBusy(overview, false);
+        setSectionBusy(results, false);
+        disableForm(false);
+      }
+    }
+
+    // Fetch AI Overview and results from backend
+    async function fetchOverview(query, reqId) {
+      let response;
+      try {
+        response = await fetch(overviewEndpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query }),
+          credentials: "omit"
+        });
+      } catch (err) {
+        throw new Error("Network problem: could not reach backend.");
+      }
+
+      if (!response.ok) {
+        let message = `Server error (${response.status})`;
+        try {
+          const data = await response.json();
+          if (data.error) message += `: ${data.error}`;
+        } catch {}
+        throw new Error(message);
+      }
+
+      let data;
+      try {
+        data = await response.json();
+      } catch (err) {
+        throw new Error("Invalid response from backend.");
+      }
+
+      if (!data || (typeof data !== 'object')) {
+        throw new Error("No data returned.");
+      }
+      return data;
+    }
+
+    // Check /api/health for backend status (run onload)
+    async function checkBackendHealth() {
+      try {
+        const resp = await fetch(healthEndpoint, { method: "GET", credentials: "omit" });
+        if (resp.ok && (await resp.text()).trim() === 'OK') {
+          // Service alive
+        } else {
+          showStatus('<div class="error-message" role="alert">Backend API is running, but health check failed.</div>');
+        }
+      } catch {
+        showStatus('<div class="error-message" role="alert">Warning: Unable to connect to backend API.</div>');
+      }
+    }
+
+    // Loading spinner helpers
+    function showSectionSpinner(section) {
+      clearSection(section);
+      const spinner = document.createElement('div');
+      spinner.className = 'spinner';
+      spinner.setAttribute('aria-label', 'Loading');
+      section.appendChild(spinner);
+      section.hidden = false;
+    }
+    function setSectionBusy(section, busy) {
+      section.setAttribute("aria-busy", busy ? "true" : "false");
+    }
+    function clearSection(section) {
+      section.innerHTML = "";
+    }
+
+    // Accessibility/user feedback
+    function showStatus(msg) {
+      statusRegion.innerHTML = msg || "";
+    }
+    function disableForm(disabled) {
+      input.disabled = disabled;
+      form.querySelector('button[type="submit"]').disabled = disabled;
+    }
+
+    // Secure escaping utilities
+    function escapeHtml(str) {
+      return (str+"").replace(/[<>&"'`]/g, c =>
+        ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;','`':'&#96;'})[c]);
+    }
+    function escapeAttr(str) {
+      return escapeHtml(str).replace(/"/g,'&quot;');
+    }
+  </script>
 </body>
 </html>
