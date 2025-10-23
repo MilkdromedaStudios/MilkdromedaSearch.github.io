@@ -181,6 +181,15 @@
       font-size: 1em;
     }
 
+    /* Small debug area */
+    #debug-info {
+      max-width: 95vw;
+      margin: 0.2rem auto 1rem auto;
+      color: #444;
+      font-size: .95rem;
+      text-align: center;
+    }
+
     /* Responsive: Stack and shrink margins on mobile */
     @media (max-width: 600px) {
       form[role="search"], #ai-overview, #search-results {
@@ -206,6 +215,10 @@
       </button>
     </form>
     <div id="status-region" role="status" aria-live="polite" aria-atomic="true"></div>
+
+    <!-- debug info area -->
+    <div id="debug-info" aria-hidden="true"></div>
+
     <section id="ai-overview" tabindex="-1" aria-busy="false" hidden>
       <!-- AI overview inserted here -->
     </section>
@@ -220,9 +233,17 @@
   </footer>
   <script>
     // CONFIG: Set this to your Render backend base URL if needed (no trailing slash).
-    const API_BASE = ""; // e.g. "" for same domain, or "https://your-backend.onrender.com"
-    const healthEndpoint = API_BASE + "/api/health";
-    const overviewEndpoint = API_BASE + "/api/overview";
+    // Example: const API_BASE = "https://your-backend.onrender.com"
+    const API_BASE = ""; // <-- if your frontend is on a different domain than the backend, set this to the backend's base URL
+
+    // Helper: allow quick override with ?api_base= in the URL for testing
+    const urlParams = new URLSearchParams(window.location.search);
+    const API_BASE_OVERRIDE = urlParams.get('api_base') || "";
+    const DEBUG = urlParams.get('debug') === "1"; // set ?debug=1 to enable console logging
+    const ACTIVE_API_BASE = (API_BASE_OVERRIDE || API_BASE).replace(/\/$/, ""); // strip trailing slash
+
+    const healthEndpoint = (ACTIVE_API_BASE || "") + "/api/health";
+    const overviewEndpoint = (ACTIVE_API_BASE || "") + "/api/overview";
 
     // Get key elements
     const form = document.getElementById('search-form');
@@ -230,12 +251,28 @@
     const overview = document.getElementById('ai-overview');
     const results = document.getElementById('search-results');
     const statusRegion = document.getElementById('status-region');
+    const debugInfo = document.getElementById('debug-info');
 
     let lastRequestId = 0;
+
+    function logDebug(...args) {
+      if (DEBUG) console.debug('[MilkdromedaSearch]', ...args);
+    }
+
+    // Show small debug info about API base on the page
+    function showDebugBanner() {
+      if (!ACTIVE_API_BASE) {
+        debugInfo.innerHTML = 'Frontend is configured to call the backend on the same origin. If your backend runs on another host (Render), add ?api_base=https://your-backend.onrender.com to the URL for testing.';
+      } else {
+        debugInfo.innerHTML = 'Using API base: ' + escapeHtml(ACTIVE_API_BASE) + (DEBUG ? ' (debug on)' : '');
+      }
+      debugInfo.setAttribute('aria-hidden', 'false');
+    }
 
     // Set focus on input on load
     window.addEventListener('DOMContentLoaded', () => {
       input.focus();
+      showDebugBanner();
       checkBackendHealth();
     });
 
@@ -265,10 +302,14 @@
       disableForm(true);
 
       const reqId = ++lastRequestId;
+      logDebug('startSearch', { query, reqId, overviewEndpoint });
 
       try {
         const data = await fetchOverview(query, reqId);
-        if (reqId !== lastRequestId) return; // Only update if still latest request
+        if (reqId !== lastRequestId) {
+          logDebug('stale response, ignoring', reqId);
+          return; // Only update if still latest request
+        }
 
         clearSection(overview);
         clearSection(results);
@@ -299,10 +340,9 @@
         showStatus('Results loaded.');
         overview.focus();
       } catch (err) {
+        logDebug('startSearch caught', err);
         clearSection(overview);
         clearSection(results);
-        overview.innerHTML = '';
-        results.innerHTML = '';
         overview.hidden = true;
         results.hidden = true;
         showStatus('<div class="error-message" role="alert">⚠️ ' + escapeHtml(err.message) + '</div>');
@@ -315,8 +355,14 @@
 
     // Fetch AI Overview and results from backend
     async function fetchOverview(query, reqId) {
+      if (!overviewEndpoint || overviewEndpoint.endsWith('/api/overview') && !ACTIVE_API_BASE && location.origin.indexOf('github.io') >= 0) {
+        // Helpful warning: if frontend is on github.io and API_BASE is empty, calls to /api will likely fail.
+        logDebug('No ACTIVE_API_BASE and running on github.io; ensure API_BASE is set to your Render URL.');
+      }
+
       let response;
       try {
+        logDebug('fetch', { url: overviewEndpoint, body: { query }});
         response = await fetch(overviewEndpoint, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -324,15 +370,31 @@
           credentials: "omit"
         });
       } catch (err) {
-        throw new Error("Network problem: could not reach backend.");
+        logDebug('network error', err);
+        throw new Error("Network problem: could not reach backend. Check that API_BASE is set and the backend allows cross-origin requests.");
       }
 
       if (!response.ok) {
         let message = `Server error (${response.status})`;
+        // Try to get response text for debugging (could be HTML or JSON)
+        let text = '';
         try {
-          const data = await response.json();
-          if (data.error) message += `: ${data.error}`;
-        } catch {}
+          text = await response.text();
+          if (text) {
+            // If JSON with { error }, try to parse
+            try {
+              const j = JSON.parse(text);
+              if (j.error) message += `: ${j.error}`;
+              else message += `: ${JSON.stringify(j)}`;
+            } catch {
+              // not JSON
+              message += `: ${text.substring(0, 500)}`; // show up to 500 chars
+            }
+          }
+        } catch (err) {
+          // ignore
+        }
+        logDebug('response not ok', { status: response.status, text: text });
         throw new Error(message);
       }
 
@@ -340,7 +402,11 @@
       try {
         data = await response.json();
       } catch (err) {
-        throw new Error("Invalid response from backend.");
+        // Try to get raw text if JSON parsing fails
+        let raw = '';
+        try { raw = await response.text(); } catch {}
+        logDebug('JSON parse error', raw);
+        throw new Error("Invalid JSON response from backend: " + (raw ? raw.substring(0,300) : 'no body'));
       }
 
       if (!data || (typeof data !== 'object')) {
@@ -351,15 +417,22 @@
 
     // Check /api/health for backend status (run onload)
     async function checkBackendHealth() {
+      if (!healthEndpoint) {
+        showStatus('<div class="error-message" role="alert">Backend API base is not configured. Use ?api_base=https://your-backend.onrender.com to test.</div>');
+        return;
+      }
       try {
+        logDebug('health check', healthEndpoint);
         const resp = await fetch(healthEndpoint, { method: "GET", credentials: "omit" });
-        if (resp.ok && (await resp.text()).trim() === 'OK') {
-          // Service alive
+        const text = await resp.text();
+        if (resp.ok && text.trim() === 'OK') {
+          showStatus('Backend health: OK');
         } else {
-          showStatus('<div class="error-message" role="alert">Backend API is running, but health check failed.</div>');
+          showStatus('<div class="error-message" role="alert">Backend API is reachable but health check failed. Status: ' + resp.status + ' — ' + escapeHtml(text) + '</div>');
         }
-      } catch {
-        showStatus('<div class="error-message" role="alert">Warning: Unable to connect to backend API.</div>');
+      } catch (err) {
+        logDebug('health check error', err);
+        showStatus('<div class="error-message" role="alert">Warning: Unable to connect to backend API. Check network, API_BASE, and CORS.</div>');
       }
     }
 
