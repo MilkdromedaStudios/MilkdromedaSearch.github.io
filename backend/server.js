@@ -1,9 +1,15 @@
-// backend/server.js
 import express from "express";
 import fetch from "node-fetch";
 
 const app = express();
 app.use(express.json());
+
+// Allow fonts/styles (CSP fix)
+app.use((req, res, next) => {
+  res.setHeader("Content-Security-Policy",
+    "default-src 'self' https: data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; script-src 'self' https: 'unsafe-inline'; img-src 'self' data: https:;");
+  next();
+});
 
 // Health check
 app.get("/api/health", (_req, res) => {
@@ -24,7 +30,7 @@ app.post("/api/overview", async (req, res) => {
       },
       body: JSON.stringify({
         model: "gpt-4o-mini",
-        messages: [{ role: "user", content: `Provide a concise overview of: ${query}` }],
+        messages: [{ role: "user", content: `Give a concise overview of: ${query}` }],
         temperature: 0.5
       })
     });
@@ -37,12 +43,11 @@ app.post("/api/overview", async (req, res) => {
   }
 });
 
-// Links endpoint (placeholder; replace with your search/curation logic)
+// Links endpoint (placeholder)
 app.post("/api/search", async (req, res) => {
   const { query } = req.body || {};
   if (!query) return res.status(400).json({ error: "Missing query" });
 
-  // Example: static items to prove wiring works
   res.json({
     results: [
       { title: "Official wiki", description: `Background info for "${query}"` },
@@ -51,6 +56,10 @@ app.post("/api/search", async (req, res) => {
   });
 });
 
-// Server listen
+// Root route
+app.get("/", (_req, res) => {
+  res.send("Backend is running. Use /api/overview or /api/search.");
+});
+
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log("Backend running on port " + port));
