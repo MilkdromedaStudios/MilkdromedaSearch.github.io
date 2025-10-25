@@ -1,476 +1,170 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Milkdromeda Search</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Search Milkdromeda — Google-like UI with AI Overview powered by Meilisearch and an AI service." />
   <style>
+    /* Google-like centered search page with results + AI overview */
     :root {
-      --bg: #fff;
-      --primary: #1a73e8;
-      --accent: #e8eaed;
+      --bg: #ffffff;
+      --accent: #1a73e8;
+      --muted: #6b7280;
       --text: #202124;
-      --border: #dadce0;
-      --error: #d93025;
-      --spinner: #1a73e8;
-      --shadow: 0 2px 8px rgba(0,0,0,0.06);
+      font-family: "Roboto", Inter, Arial, sans-serif;
     }
-    html, body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: system-ui, Arial, sans-serif;
-      margin: 0; padding: 0;
-    }
-    header {
-      padding: 2rem 0 1.5rem 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 2.4rem;
-      font-weight: 500;
-      letter-spacing: -.03em;
-      color: var(--primary);
-      user-select: none;
-    }
-    main {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--text)}
+    .wrap{max-width:780px;margin:80px auto;text-align:center;padding:0 20px;box-sizing:border-box}
+    .brand{font-size:42px;font-weight:700;color:var(--accent);letter-spacing:-1px;margin-bottom:18px}
+    .search-row{display:flex;gap:10px;justify-content:center;margin-bottom:12px}
+    .search-input{flex:0 1 60%;padding:14px 18px;border:1px solid #dfe1e5;border-radius:24px;font-size:16px;box-shadow:0 1px 2px rgba(0,0,0,0.05)}
+    .btn{padding:10px 14px;border-radius:8px;border:0;background:var(--accent);color:#fff;font-weight:600;cursor:pointer}
+    .hint{color:var(--muted);font-size:13px;margin-bottom:22px}
 
-    /* Search Bar */
-    form[role="search"] {
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      box-shadow: var(--shadow);
-      border-radius: 24px;
-      background: var(--accent);
-      padding: 0.5rem 1.25rem;
-      min-width: 320px;
-      max-width: 560px;
-      width: 95vw;
-      margin: 0 auto 2rem auto;
-      gap: 0.7rem;
-    }
-    label[for="search-input"] {
-      position: absolute;
-      opacity: 0;
-      width: 1px; height: 1px;
-      overflow: hidden;
-      pointer-events: none;
-    }
-    input[type="search"] {
-      border: none;
-      outline: none;
-      padding: 0.7rem 0.5rem;
-      font-size: 1.1rem;
-      flex: 1 1 auto;
-      background: transparent;
-      color: var(--text);
-    }
-    input[type="search"]:focus {
-      outline: none;
-      background: #eef3fb;
-    }
-    button[type="submit"] {
-      background: var(--primary);
-      color: #fff;
-      border: none;
-      border-radius: 18px;
-      width: 44px;
-      height: 44px;
-      font-size: 1.3rem;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      transition: background 0.12s;
-      outline: none;
-    }
-    button[type="submit"]:hover,
-    button[type="submit"]:focus {
-      background: #1565c0;
-    }
-    button[disabled] {
-      opacity: 0.7;
-      cursor: not-allowed;
-    }
+    .content{display:flex;gap:28px;align-items:flex-start;justify-content:center}
+    .main{flex:1;max-width:640px;text-align:left}
+    .overview{background:#f8f9fa;padding:14px;border-radius:8px;border:1px solid #e6e6e6;margin-bottom:14px}
+    .overview h3{margin:0 0 8px 0;font-size:16px;color:#2b2b2b}
+    .overview p{margin:0;color:var(--muted)}
 
-    /* Main Sections */
-    #ai-overview, #search-results {
-      min-width: 320px;
-      max-width: 600px;
-      width: 95vw;
-      background: #fff;
-      margin: 0.5rem auto 1.25rem auto;
-      border-radius: 0.7rem;
-      box-shadow: var(--shadow);
-      padding: 1.1rem 1.1rem 1.1rem 1.4rem;
-      position: relative;
-    }
-    #ai-overview {
-      margin-top: 0;
-    }
-    #ai-overview[aria-busy="true"],
-    #search-results[aria-busy="true"] {
-      opacity: 0.6;
-      filter: blur(1px);
-    }
-    #ai-overview[hidden],
-    #search-results[hidden] {
-      display: none;
-    }
-    #search-results ul {
-      padding: 0;
-      margin: 0;
-      list-style: none;
-    }
-    #search-results li {
-      padding: 0.5rem 0 0.5rem 0;
-      border-bottom: 1px solid var(--accent);
-    }
-    #search-results li:last-child {
-      border-bottom: none;
-    }
+    .results{display:flex;flex-direction:column;gap:12px}
+    .result{padding:12px;border-radius:8px;border:1px solid #eee;background:#fff}
+    .result .title{color:var(--accent);font-weight:700;margin-bottom:6px}
+    .result .desc{color:var(--muted);font-size:14px}
 
-    /* Loading Spinner */
-    .spinner {
-      display: inline-block;
-      width: 28px;
-      height: 28px;
-      vertical-align: middle;
-      position: relative;
-      left: 50%;
-      transform: translateX(-50%);
-    }
-    .spinner:after {
-      content: " ";
-      display: block;
-      width: 22px;
-      height: 22px;
-      margin: 3px;
-      border-radius: 50%;
-      border: 3.5px solid var(--spinner);
-      border-color: var(--spinner) transparent var(--spinner) transparent;
-      animation: spin 1s linear infinite;
-    }
-    @keyframes spin {
-      0% { transform: rotate(0deg);}
-      100% { transform: rotate(360deg);}
-    }
-
-    /* Error Messages */
-    .error-message {
-      display: inline-block;
-      color: var(--error);
-      background: #fbe9e7;
-      border: 1px solid #ef9a9a;
-      border-radius: 4px;
-      padding: 0.6em 1.1em;
-      margin: 0.5em 0;
-      font-size: 1em;
-      font-weight: 500;
-    }
-
-    /* Status/live ARIA region for readers */
-    [role="status"] {
-      display: block;
-      min-height: 1rem;
-      margin-bottom: 0.2em;
-      font-size: 1em;
-    }
-
-    /* Small debug area */
-    #debug-info {
-      max-width: 95vw;
-      margin: 0.2rem auto 1rem auto;
-      color: #444;
-      font-size: .95rem;
-      text-align: center;
-    }
-
-    /* Responsive: Stack and shrink margins on mobile */
-    @media (max-width: 600px) {
-      form[role="search"], #ai-overview, #search-results {
-        max-width: 99vw;
-        min-width: unset;
-        padding: 0.8rem 0.3rem 0.8rem 0.6rem;
-      }
-      header { font-size: 1.55rem; }
-    }
+    .sidebar{width:260px}
+    .footer{margin-top:32px;color:var(--muted);font-size:13px;text-align:center}
+    @media (max-width:900px){ .content{flex-direction:column} .sidebar{width:100%} .search-input{flex-basis:68%} }
   </style>
 </head>
 <body>
-  <header>Milkdromeda Search</header>
-  <main>
-    <form role="search" aria-label="Site search" id="search-form" autocomplete="off">
-      <label for="search-input">Search this site:</label>
-      <input id="search-input" type="search" name="q" maxlength="128" required autocomplete="off"
-        placeholder="Search the web or ask a question"
-        aria-label="Search here"
-        />
-      <button type="submit" aria-label="Submit search">
-        <span aria-hidden="true">&#128269;</span>
-      </button>
-    </form>
-    <div id="status-region" role="status" aria-live="polite" aria-atomic="true"></div>
+  <main class="wrap" role="main">
+    <div class="brand">Milkdromeda</div>
 
-    <!-- debug info area -->
-    <div id="debug-info" aria-hidden="true"></div>
+    <div class="search-row" role="search" aria-label="Search">
+      <input id="q" class="search-input" placeholder="Search Milkdromeda (e.g., Blade Ball, AFK farm...)" />
+      <button id="searchBtn" class="btn" aria-label="Search">Search</button>
+    </div>
 
-    <section id="ai-overview" tabindex="-1" aria-busy="false" hidden>
-      <!-- AI overview inserted here -->
-    </section>
-    <section id="search-results" tabindex="-1" aria-busy="false" hidden>
-      <!-- Results list inserted here -->
-    </section>
+    <div class="hint">Press Enter to search • AI overview above results</div>
+
+    <div class="content">
+      <section class="main" aria-live="polite">
+        <div id="overview" class="overview" style="display:none">
+          <h3>AI Overview</h3>
+          <p id="overviewText"></p>
+        </div>
+
+        <div id="results" class="results"></div>
+      </section>
+
+      <aside class="sidebar" aria-hidden>
+        <div style="padding:12px;border-radius:8px;border:1px solid #eee;background:#fff">
+          <strong style="display:block;margin-bottom:8px">Quick actions</strong>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <button id="downloadBtn" style="padding:8px;border-radius:6px;border:1px solid #e6e6e6;background:#fff;cursor:pointer">Download JSON</button>
+            <button id="healthBtn" style="padding:8px;border-radius:6px;border:1px solid #e6e6e6;background:#fff;cursor:pointer">Check API Health</button>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <div class="footer">© <span id="year"></span> Milkdromeda Studios</div>
   </main>
-  <footer>
-    <small style="display:block;text-align:center;color:#888;padding:1.5em 0 0.7em 0;">
-      Powered by Milkdromeda Search & Milkdromeda Sudios Inc. | 2025 | Accessible, Responsive, Open UI
-    </small>
-  </footer>
+
   <script>
-    //For backened to work
-    <a href="https://milkdromedasearch-github-io.onrender.com" target="_blank"></a>
-    // CONFIG: Set this to your Render backend base URL if needed (no trailing slash).
-    // Example: const API_BASE = "https://your-backend.onrender.com"
-    const API_BASE = "https://milkdromedasearch-github-io.onrender.com"; // <-- if your frontend is on a different domain than the backend, set this to the backend's base URL
+    // Frontend wiring — calls the backend deployed at the same origin
+    // If backend is on a different origin, set API_BASE to that origin URL.
+    const API_BASE = ""; // "" means same origin, or "https://your-backend.onrender.com"
 
-    // Helper: allow quick override with ?api_base= in the URL for testing
-    const urlParams = new URLSearchParams(window.location.search);
-    const API_BASE_OVERRIDE = urlParams.get('api_base') || "";
-    const DEBUG = urlParams.get('debug') === "1"; // set ?debug=1 to enable console logging
-    const ACTIVE_API_BASE = (API_BASE_OVERRIDE || API_BASE).replace(/\/$/, ""); // strip trailing slash
+    const qEl = document.getElementById("q");
+    const btn = document.getElementById("searchBtn");
+    const resultsEl = document.getElementById("results");
+    const overviewEl = document.getElementById("overview");
+    const overviewTextEl = document.getElementById("overviewText");
+    const healthBtn = document.getElementById("healthBtn");
+    const downloadBtn = document.getElementById("downloadBtn");
+    document.getElementById("year").textContent = new Date().getFullYear();
 
-    const healthEndpoint = (ACTIVE_API_BASE || "") + "/api/health";
-    const overviewEndpoint = (ACTIVE_API_BASE || "") + "/api/overview";
+    function escapeHtml(s){ if(!s && s !== 0) return ''; return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
-    // Get key elements
-    const form = document.getElementById('search-form');
-    const input = document.getElementById('search-input');
-    const overview = document.getElementById('ai-overview');
-    const results = document.getElementById('search-results');
-    const statusRegion = document.getElementById('status-region');
-    const debugInfo = document.getElementById('debug-info');
-
-    let lastRequestId = 0;
-
-    function logDebug(...args) {
-      if (DEBUG) console.debug('[MilkdromedaSearch]', ...args);
+    async function safeJsonFetch(path, body=null) {
+      const url = (API_BASE || "") + path;
+      const opts = body ? {
+        method: 'POST',
+        headers: { 'Accept':'application/json','Content-Type':'application/json' },
+        body: JSON.stringify(body)
+      } : { method: 'GET' };
+      const res = await fetch(url, opts);
+      if (res.status === 204) return null;
+      const text = await res.text().catch(()=>null);
+      if (!text) return null;
+      try { return JSON.parse(text); } catch(e) { return { text }; }
     }
 
-    // Show small debug info about API base on the page
-    function showDebugBanner() {
-      if (!ACTIVE_API_BASE) {
-        debugInfo.innerHTML = 'Frontend is configured to call the backend on the same origin. If your backend runs on another host (Render), add ?api_base=https://your-backend.onrender.com to the URL for testing.';
-      } else {
-        debugInfo.innerHTML = 'Using API base: ' + escapeHtml(ACTIVE_API_BASE) + (DEBUG ? ' (debug on)' : '');
-      }
-      debugInfo.setAttribute('aria-hidden', 'false');
-    }
-
-    // Set focus on input on load
-    window.addEventListener('DOMContentLoaded', () => {
-      input.focus();
-      showDebugBanner();
-      checkBackendHealth();
-    });
-
-    // Event listener for search submit
-    form.addEventListener('submit', async function(event) {
-      event.preventDefault();
-      const query = input.value.trim();
-      if (!query) return;
-      // For accessibility, shift focus
-      overview.setAttribute('tabindex', '-1');
-      results.setAttribute('tabindex', '-1');
-      startSearch(query);
-    });
-
-    // Main search trigger
-    async function startSearch(query) {
-      // Clear old data
-      overview.hidden = true;
-      results.hidden = true;
-      clearSection(overview);
-      clearSection(results);
-      showStatus('');
-      setSectionBusy(overview, true);
-      setSectionBusy(results, true);
-      showSectionSpinner(overview);
-      showSectionSpinner(results);
-      disableForm(true);
-
-      const reqId = ++lastRequestId;
-      logDebug('startSearch', { query, reqId, overviewEndpoint });
-
-      try {
-        const data = await fetchOverview(query, reqId);
-        if (reqId !== lastRequestId) {
-          logDebug('stale response, ignoring', reqId);
-          return; // Only update if still latest request
-        }
-
-        clearSection(overview);
-        clearSection(results);
-
-        if (data.overview && typeof data.overview === "string") {
-          overview.innerHTML = `<strong>AI Overview</strong><p>${escapeHtml(data.overview)}</p>`;
-          overview.hidden = false;
-        } else {
-          overview.innerHTML = "<em>No summary available.</em>";
-          overview.hidden = false;
-        }
-
-        if (Array.isArray(data.results) && data.results.length) {
-          const html = "<ul>" + data.results.map(r =>
-            `<li>
-              ${r.link
-                ? `<a href="${escapeAttr(r.link)}" target="_blank" rel="noopener">${escapeHtml(r.title || r.link)}</a><br><small>${escapeHtml(r.snippet || '')}</small>`
-                : `<strong>${escapeHtml(r.title)}</strong><br><small>${escapeHtml(r.snippet || '')}</small>`
-              }
-            </li>`
-          ).join('') + "</ul>";
-          results.innerHTML = "<strong>Search Results</strong>" + html;
-          results.hidden = false;
-        } else {
-          results.innerHTML = "<em>No results found.</em>";
-          results.hidden = false;
-        }
-        showStatus('Results loaded.');
-        overview.focus();
-      } catch (err) {
-        logDebug('startSearch caught', err);
-        clearSection(overview);
-        clearSection(results);
-        overview.hidden = true;
-        results.hidden = true;
-        showStatus('<div class="error-message" role="alert">⚠️ ' + escapeHtml(err.message) + '</div>');
-      } finally {
-        setSectionBusy(overview, false);
-        setSectionBusy(results, false);
-        disableForm(false);
-      }
-    }
-
-    // Fetch AI Overview and results from backend
-    async function fetchOverview(query, reqId) {
-      if (!overviewEndpoint || overviewEndpoint.endsWith('/api/overview') && !ACTIVE_API_BASE && location.origin.indexOf('github.io') >= 0) {
-        // Helpful warning: if frontend is on github.io and API_BASE is empty, calls to /api will likely fail.
-        logDebug('No ACTIVE_API_BASE and running on github.io; ensure API_BASE is set to your Render URL.');
-      }
-
-      let response;
-      try {
-        logDebug('fetch', { url: overviewEndpoint, body: { query }});
-        response = await fetch(overviewEndpoint, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ query }),
-          credentials: "omit"
-        });
-      } catch (err) {
-        logDebug('network error', err);
-        throw new Error("Network problem: could not reach backend. Check that API_BASE is set and the backend allows cross-origin requests.");
-      }
-
-      if (!response.ok) {
-        let message = `Server error (${response.status})`;
-        // Try to get response text for debugging (could be HTML or JSON)
-        let text = '';
-        try {
-          text = await response.text();
-          if (text) {
-            // If JSON with { error }, try to parse
-            try {
-              const j = JSON.parse(text);
-              if (j.error) message += `: ${j.error}`;
-              else message += `: ${JSON.stringify(j)}`;
-            } catch {
-              // not JSON
-              message += `: ${text.substring(0, 500)}`; // show up to 500 chars
-            }
-          }
-        } catch (err) {
-          // ignore
-        }
-        logDebug('response not ok', { status: response.status, text: text });
-        throw new Error(message);
-      }
-
-      let data;
-      try {
-        data = await response.json();
-      } catch (err) {
-        // Try to get raw text if JSON parsing fails
-        let raw = '';
-        try { raw = await response.text(); } catch {}
-        logDebug('JSON parse error', raw);
-        throw new Error("Invalid JSON response from backend: " + (raw ? raw.substring(0,300) : 'no body'));
-      }
-
-      if (!data || (typeof data !== 'object')) {
-        throw new Error("No data returned.");
-      }
-      return data;
-    }
-
-    // Check /api/health for backend status (run onload)
-    async function checkBackendHealth() {
-      if (!healthEndpoint) {
-        showStatus('<div class="error-message" role="alert">Backend API base is not configured. Use ?api_base=https://your-backend.onrender.com to test.</div>');
+    function renderResults(items) {
+      resultsEl.innerHTML = "";
+      if (!items || items.length === 0) {
+        resultsEl.innerHTML = '<div style="color:#6b7280">No results</div>';
         return;
       }
+      items.forEach(it => {
+        const title = it.title || it.name || it.id || "Untitled";
+        const desc = it.description || it.snippet || it.summary || "";
+        const div = document.createElement("div");
+        div.className = "result";
+        div.innerHTML = `<div class="title">${escapeHtml(title)}</div>` + (desc ? `<div class="desc">${escapeHtml(desc)}</div>` : "");
+        resultsEl.appendChild(div);
+      });
+    }
+
+    async function doSearch() {
+      const q = qEl.value.trim();
+      if (!q) return;
+      // clear UI
+      overviewEl.style.display = "none";
+      overviewTextEl.textContent = "";
+      renderResults([]);
+
+      // 1) fetch search results
+      const search = await safeJsonFetch("/api/search", { query: q, index: "documents", limit: 12 }) || {};
+      const hits = search.results || [];
+
+      renderResults(hits);
+
+      // 2) fetch AI overview (non-blocking)
+      overviewEl.style.display = "block";
+      overviewTextEl.textContent = "Generating overview...";
+      const ov = await safeJsonFetch("/api/overview", { query: q });
+      const text = ov?.result || ov?.summary || ov?.text || ov?.message || "No overview returned.";
+      overviewTextEl.textContent = text;
+    }
+
+    btn.addEventListener("click", doSearch);
+    qEl.addEventListener("keydown", (e) => { if (e.key === "Enter") doSearch(); });
+
+    healthBtn.addEventListener("click", async () => {
       try {
-        logDebug('health check', healthEndpoint);
-        const resp = await fetch(healthEndpoint, { method: "GET", credentials: "omit" });
-        const text = await resp.text();
-        if (resp.ok && text.trim() === 'OK') {
-          showStatus('Backend health: OK');
-        } else {
-          showStatus('<div class="error-message" role="alert">Backend API is reachable but health check failed. Status: ' + resp.status + ' — ' + escapeHtml(text) + '</div>');
-        }
-      } catch (err) {
-        logDebug('health check error', err);
-        showStatus('<div class="error-message" role="alert">Warning: Unable to connect to backend API. Check network, API_BASE, and CORS.</div>');
-      }
-    }
+        const h = await safeJsonFetch("/api/health");
+        alert("Backend health: " + (h?.status || JSON.stringify(h)));
+      } catch (err) { alert("Health check failed: " + (err?.message || err)); }
+    });
 
-    // Loading spinner helpers
-    function showSectionSpinner(section) {
-      clearSection(section);
-      const spinner = document.createElement('div');
-      spinner.className = 'spinner';
-      spinner.setAttribute('aria-label', 'Loading');
-      section.appendChild(spinner);
-      section.hidden = false;
-    }
-    function setSectionBusy(section, busy) {
-      section.setAttribute("aria-busy", busy ? "true" : "false");
-    }
-    function clearSection(section) {
-      section.innerHTML = "";
-    }
-
-    // Accessibility/user feedback
-    function showStatus(msg) {
-      statusRegion.innerHTML = msg || "";
-    }
-    function disableForm(disabled) {
-      input.disabled = disabled;
-      form.querySelector('button[type="submit"]').disabled = disabled;
-    }
-
-    // Secure escaping utilities
-    function escapeHtml(str) {
-      return (str+"").replace(/[<>&"'`]/g, c =>
-        ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;','`':'&#96;'})[c]);
-    }
-    function escapeAttr(str) {
-      return escapeHtml(str).replace(/"/g,'&quot;');
-    }
+    downloadBtn.addEventListener("click", () => {
+      const results = Array.from(resultsEl.querySelectorAll(".result")).map(n => ({
+        title: n.querySelector(".title")?.textContent || "",
+        desc: n.querySelector(".desc")?.textContent || ""
+      }));
+      const overview = overviewTextEl.textContent || "";
+      const blob = new Blob([JSON.stringify({ overview, results }, null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "results.json";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    });
   </script>
 </body>
 </html>
